@@ -22,6 +22,30 @@ class LoginForm extends Form
     public bool $remember = false;
 
     /**
+     * Validate the user's credentials without logging in.
+     *
+     * @throws ValidationException
+     */
+    public function validateCredentials(): \App\Models\User
+    {
+        $this->ensureIsNotRateLimited();
+
+        $user = \App\Models\User::where('email', $this->email)->first();
+
+        if (! $user || ! \Illuminate\Support\Facades\Hash::check($this->password, $user->password)) {
+            RateLimiter::hit($this->throttleKey());
+
+            throw ValidationException::withMessages([
+                'form.email' => trans('auth.failed'),
+            ]);
+        }
+
+        RateLimiter::clear($this->throttleKey());
+
+        return $user;
+    }
+
+    /**
      * Attempt to authenticate the request's credentials.
      *
      * @throws ValidationException

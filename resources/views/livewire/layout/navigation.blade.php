@@ -16,15 +16,16 @@ new class extends Component
     }
 }; ?>
 
-<nav x-data="{ open: false }" class="bg-white border-b border-gray-100">
+<nav x-data="{ open: false }" class="bg-white dark:bg-[#1e293b] border-b border-gray-100 dark:border-white/10">
     <!-- Primary Navigation Menu -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
             <div class="flex">
                 <!-- Logo -->
                 <div class="shrink-0 flex items-center">
-                    <a href="{{ route('dashboard') }}" wire:navigate>
-                        <x-application-logo class="block h-9 w-auto fill-current text-gray-800" />
+                    <a href="{{ route('dashboard') }}" wire:navigate class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-[#257bf4] text-3xl">celebration</span>
+                        <span class="text-gray-900 dark:text-white font-bold text-lg hidden sm:block">Event Planner</span>
                     </a>
                 </div>
 
@@ -42,7 +43,7 @@ new class extends Component
                             $unreadCount = \App\Models\Notification::where('user_id', auth()->id())->where('read', false)->count();
                         @endphp
                         @if($unreadCount > 0)
-                            <span class="ms-2 px-1.5 py-0.5 text-xs font-bold leading-none text-white bg-red-600 rounded-full">
+                            <span class="ms-1 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white bg-[#257bf4] rounded-full">
                                 {{ $unreadCount }}
                             </span>
                         @endif
@@ -50,11 +51,39 @@ new class extends Component
                 </div>
             </div>
 
-            <!-- Settings Dropdown -->
-            <div class="hidden sm:flex sm:items-center sm:ms-6">
+            <!-- Theme Toggle & Settings Dropdown -->
+            <div class="hidden sm:flex sm:items-center sm:ms-6 gap-4">
+                <div x-data="{ 
+                    theme: localStorage.theme || 'system',
+                    init() {
+                        window.addEventListener('storage', (e) => {
+                            if (e.key === 'theme') {
+                                this.theme = e.newValue || 'system';
+                            }
+                        });
+                    },
+                    setTheme(newTheme) {
+                        this.theme = newTheme;
+                        if (newTheme === 'system') {
+                            localStorage.removeItem('theme');
+                        } else {
+                            localStorage.theme = newTheme;
+                        }
+                        if (window.applyTheme) window.applyTheme();
+                    }
+                }" class="flex items-center">
+                    <button @click="setTheme(theme === 'light' ? 'dark' : (theme === 'dark' ? 'system' : 'light'))" 
+                            class="p-2 rounded-lg text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/5 transition duration-150 ease-in-out focus:outline-none"
+                            :title="'Theme: ' + theme">
+                        <span x-show="theme === 'light'" class="material-symbols-outlined">light_mode</span>
+                        <span x-show="theme === 'dark'" class="material-symbols-outlined">dark_mode</span>
+                        <span x-show="theme === 'system'" class="material-symbols-outlined">desktop_windows</span>
+                    </button>
+                </div>
+
                 <x-dropdown align="right" width="48">
                     <x-slot name="trigger">
-                        <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none transition ease-in-out duration-150">
+                        <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 dark:text-gray-400 bg-white dark:bg-[#101722]/50 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none transition ease-in-out duration-150">
                             <div x-data="{{ json_encode(['name' => auth()->user()->name]) }}" x-text="name" x-on:profile-updated.window="name = $event.detail.name"></div>
 
                             <div class="ms-1">
@@ -93,7 +122,7 @@ new class extends Component
     </div>
 
     <!-- Responsive Navigation Menu -->
-    <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
+    <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden bg-white dark:bg-[#1e293b] transition-colors duration-300">
         <div class="pt-2 pb-3 space-y-1">
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" wire:navigate>
                 {{ __('Dashboard') }}
@@ -101,13 +130,45 @@ new class extends Component
             <x-responsive-nav-link :href="route('events.index')" :active="request()->routeIs('events.*')" wire:navigate>
                 {{ __('My Events') }}
             </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('notifications.index')" :active="request()->routeIs('notifications.*')" wire:navigate>
+                {{ __('Notifications') }}
+            </x-responsive-nav-link>
         </div>
 
         <!-- Responsive Settings Options -->
-        <div class="pt-4 pb-1 border-t border-gray-200">
-            <div class="px-4">
-                <div class="font-medium text-base text-gray-800" x-data="{{ json_encode(['name' => auth()->user()->name]) }}" x-text="name" x-on:profile-updated.window="name = $event.detail.name"></div>
-                <div class="font-medium text-sm text-gray-500">{{ auth()->user()->email }}</div>
+        <div class="pt-4 pb-1 border-t border-gray-200 dark:border-white/10">
+            <div class="flex items-center justify-between px-4">
+                <div>
+                    <div class="font-medium text-base text-gray-800 dark:text-gray-200" x-data="{{ json_encode(['name' => auth()->user()->name]) }}" x-text="name" x-on:profile-updated.window="name = $event.detail.name"></div>
+                    <div class="font-medium text-sm text-gray-500">{{ auth()->user()->email }}</div>
+                </div>
+                
+                <div x-data="{ 
+                    theme: localStorage.theme || 'system',
+                    init() {
+                        window.addEventListener('storage', (e) => {
+                            if (e.key === 'theme') {
+                                this.theme = e.newValue || 'system';
+                            }
+                        });
+                    },
+                    setTheme(newTheme) {
+                        this.theme = newTheme;
+                        if (newTheme === 'system') {
+                            localStorage.removeItem('theme');
+                        } else {
+                            localStorage.theme = newTheme;
+                        }
+                        if (window.applyTheme) window.applyTheme();
+                    }
+                }" class="flex items-center">
+                    <button @click="setTheme(theme === 'light' ? 'dark' : (theme === 'dark' ? 'system' : 'light'))" 
+                            class="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 transition duration-150 ease-in-out focus:outline-none">
+                        <span x-show="theme === 'light'" class="material-symbols-outlined">light_mode</span>
+                        <span x-show="theme === 'dark'" class="material-symbols-outlined">dark_mode</span>
+                        <span x-show="theme === 'system'" class="material-symbols-outlined">desktop_windows</span>
+                    </button>
+                </div>
             </div>
 
             <div class="mt-3 space-y-1">
