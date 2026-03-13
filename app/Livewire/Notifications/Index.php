@@ -1,0 +1,69 @@
+<?php
+
+namespace App\Livewire\Notifications;
+
+use Livewire\Component;
+use App\Models\Notification;
+use Illuminate\Support\Facades\Auth;
+
+class Index extends Component
+{
+    public function markAsRead($notificationId)
+    {
+        $notification = Notification::where('user_id', Auth::id())->find($notificationId);
+        if ($notification) {
+            $notification->update(['read' => true]);
+        }
+    }
+
+    public function acceptInvite($notificationId)
+    {
+        $notification = Notification::where('user_id', Auth::id())->find($notificationId);
+        if ($notification && $notification->type === 'invite') {
+            $invite = \App\Models\Invite::find($notification->related_id);
+            if ($invite) {
+                $invite->update(['status' => 'accepted', 'responded_at' => now()]);
+                
+                // Create RSVP
+                \App\Models\RSVP::updateOrCreate(
+                    ['user_id' => Auth::id(), 'event_id' => $invite->event_id],
+                    ['status' => 'attending']
+                );
+            }
+            $notification->update(['read' => true]);
+            session()->flash('message', 'Invitation accepted!');
+        }
+    }
+
+    public function declineInvite($notificationId)
+    {
+        $notification = Notification::where('user_id', Auth::id())->find($notificationId);
+        if ($notification && $notification->type === 'invite') {
+            $invite = \App\Models\Invite::find($notification->related_id);
+            if ($invite) {
+                $invite->update(['status' => 'declined', 'responded_at' => now()]);
+                
+                // Create/Update RSVP
+                \App\Models\RSVP::updateOrCreate(
+                    ['user_id' => Auth::id(), 'event_id' => $invite->event_id],
+                    ['status' => 'declined']
+                );
+            }
+            $notification->update(['read' => true]);
+            session()->flash('message', 'Invitation declined.');
+        }
+    }
+
+    public function markAllAsRead()
+    {
+        Notification::where('user_id', Auth::id())->where('read', false)->update(['read' => true]);
+    }
+
+    public function render()
+    {
+        return view('livewire.notifications.index', [
+            'notifications' => Notification::where('user_id', Auth::id())->latest()->get(),
+            'unreadCount' => Notification::where('user_id', Auth::id())->where('read', false)->count(),
+        ])->layout('layouts.app');
+    }
+}
