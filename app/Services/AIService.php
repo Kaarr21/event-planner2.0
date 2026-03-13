@@ -16,28 +16,46 @@ class AIService
                 'Create guest list',
                 'Pick a venue',
                 'Send invitations',
+                'Plan food and drinks menu',
+                'Book entertainment or a DJ',
+                'Send thank you notes',
+                'Arrange transportation',
+                'Create an event timeline',
+                'Rent equipment or furniture',
             ],
             'Wedding' => [
                 'Hire a photographer',
                 'Select catering menu',
                 'Choose flower arrangements',
                 'Rehearsal dinner planning',
+                'Book the officiant',
+                'Send save-the-dates',
+                'Order the wedding cake',
+                'Buy wedding rings',
+                'Plan the honeymoon',
             ],
             'Conference' => [
                 'Confirm keynote speakers',
                 'Set up registration site',
                 'Organize breakout sessions',
                 'Arrange AV equipment',
+                'Design name badgers',
+                'Book hotel blocks for attendees',
+                'Prepare welcome packets',
+                'Hire event staff',
             ],
         ];
 
+        $matchedTasks = $suggestions['Basic'];
         foreach ($suggestions as $key => $tasks) {
             if (stripos($title, $key) !== false || stripos($description, $key) !== false) {
-                return $tasks;
+                $matchedTasks = $tasks;
+                break;
             }
         }
 
-        return $suggestions['Basic'];
+        shuffle($matchedTasks);
+        return array_slice($matchedTasks, 0, 4);
     }
 
     /**

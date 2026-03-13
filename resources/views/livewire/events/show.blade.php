@@ -68,26 +68,93 @@
                             </button>
                         </form>
 
+                        <!-- AI Suggestions Section -->
+                        @if (!empty($aiSuggestions))
+                            <div class="mb-8 p-4 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800 rounded-lg">
+                                <div class="flex items-center justify-between mb-4">
+                                    <h4 class="text-sm font-bold text-indigo-900 dark:text-indigo-300 flex items-center">
+                                        <svg class="w-4 h-4 mr-1.5" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.381z" clip-rule="evenodd" />
+                                        </svg>
+                                        AI Suggested Tasks
+                                    </h4>
+                                    <button type="button" wire:click="suggestAITasks" class="text-xs text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 flex items-center bg-white dark:bg-gray-800 px-2.5 py-1 rounded-md border border-indigo-200 dark:border-indigo-700 shadow-sm transition-colors">
+                                        <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                                        Refresh AI Suggestions
+                                    </button>
+                                </div>
+                                <div class="space-y-3 mb-4">
+                                    @foreach($aiSuggestions as $index => $suggestion)
+                                        <div class="flex items-start gap-3 bg-white dark:bg-gray-800 p-3 rounded-md border border-indigo-50 dark:border-gray-700 shadow-sm">
+                                            <div class="pt-1">
+                                                <input type="checkbox" wire:model.live="aiSuggestions.{{ $index }}.selected" class="w-4 h-4 text-indigo-600 bg-gray-100 border-gray-300 rounded focus:ring-indigo-500 dark:focus:ring-indigo-600 dark:bg-gray-700 dark:border-gray-600">
+                                            </div>
+                                            <div class="flex-1">
+                                                <input type="text" wire:model="aiSuggestions.{{ $index }}.title" class="w-full bg-transparent border-0 border-b border-transparent hover:border-indigo-200 focus:border-indigo-500 focus:ring-0 text-sm text-gray-900 dark:text-white p-0 py-1 transition-colors" {{ !$suggestion['selected'] ? 'disabled' : '' }}>
+                                            </div>
+                                            <button wire:click="removeSuggestion({{ $index }})" class="text-gray-400 hover:text-red-500 transition-colors p-1" title="Remove suggestion">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                            </button>
+                                        </div>
+                                    @endforeach
+                                </div>
+                                <div class="flex justify-end pt-2 border-t border-indigo-100 dark:border-indigo-800/50">
+                                    <button wire:click="saveSuggestions" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 focus:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                                        Save Selected
+                                    </button>
+                                </div>
+                            </div>
+                        @endif
+
                         <!-- Tasks List -->
                         <ul class="space-y-4">
                             @forelse ($tasks as $task)
-                                <li class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900/50 rounded-lg group">
-                                    <div class="flex items-center gap-4">
-                                        <input type="checkbox" wire:click="toggleTask({{ $task->id }})" {{ $task->completed ? 'checked' : '' }} class="w-5 h-5 text-indigo-600 bg-gray-100 border-gray-300 rounded focus:ring-indigo-500 dark:focus:ring-indigo-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
-                                        <div>
-                                            <p class="text-sm font-medium {{ $task->completed ? 'line-through text-gray-400' : 'text-gray-900 dark:text-white' }}">
-                                                {{ $task->title }}
-                                            </p>
-                                            @if ($task->due_date)
-                                                <p class="text-xs text-gray-500">Due: {{ \Carbon\Carbon::parse($task->due_date)->format('M d') }}</p>
-                                            @endif
+                                <li class="p-4 bg-gray-50 dark:bg-gray-900/50 rounded-lg group">
+                                    @if($editingTaskId === $task->id)
+                                        <div class="space-y-3">
+                                            <div class="flex gap-2">
+                                                <input type="text" wire:model="editTaskTitle" class="flex-1 bg-white border border-gray-300 text-gray-900 text-sm rounded-md focus:ring-indigo-500 focus:border-indigo-500 block w-full p-2 dark:bg-gray-800 dark:border-gray-700 dark:text-white" placeholder="Task title">
+                                                <input type="date" wire:model="editTaskDueDate" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-md focus:ring-indigo-500 focus:border-indigo-500 block p-2 dark:bg-gray-800 dark:border-gray-700 dark:text-white">
+                                            </div>
+                                            <textarea wire:model="editTaskDescription" rows="2" class="w-full bg-white border border-gray-300 text-gray-900 text-sm rounded-md focus:ring-indigo-500 focus:border-indigo-500 block p-2 dark:bg-gray-800 dark:border-gray-700 dark:text-white" placeholder="Add details or notes..."></textarea>
+                                            <div class="flex justify-end gap-2 pt-1">
+                                                <button wire:click="cancelEditTask" class="px-3 py-1.5 text-xs font-semibold text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200">Cancel</button>
+                                                <button wire:click="saveTask" class="inline-flex items-center px-3 py-1.5 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white tracking-widest hover:bg-indigo-700 focus:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">Save</button>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <button wire:click="deleteTask({{ $task->id }})" class="text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                        </svg>
-                                    </button>
+                                    @else
+                                        <div class="flex items-center justify-between">
+                                            <div class="flex items-start gap-4">
+                                                <div class="pt-0.5">
+                                                    <input type="checkbox" wire:click="toggleTask({{ $task->id }})" {{ $task->completed ? 'checked' : '' }} class="w-5 h-5 text-indigo-600 bg-gray-100 border-gray-300 rounded focus:ring-indigo-500 dark:focus:ring-indigo-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+                                                </div>
+                                                <div>
+                                                    <p class="text-sm font-medium {{ $task->completed ? 'line-through text-gray-400 dark:text-gray-500' : 'text-gray-900 dark:text-white' }}">
+                                                        {{ $task->title }}
+                                                    </p>
+                                                    @if ($task->description)
+                                                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 {{ $task->completed ? 'opacity-50' : '' }}">{{ $task->description }}</p>
+                                                    @endif
+                                                    @if ($task->due_date)
+                                                        <p class="text-xs text-indigo-500 dark:text-indigo-400 mt-1 font-medium {{ $task->completed ? 'opacity-50' : '' }}">
+                                                            <svg class="inline w-3.5 h-3.5 mr-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                                            {{ \Carbon\Carbon::parse($task->due_date)->format('M d, Y') }}
+                                                        </p>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                            <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <button wire:click="startEditTask({{ $task->id }})" class="text-gray-400 hover:text-indigo-500 p-1">
+                                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                                                </button>
+                                                <button wire:click="deleteTask({{ $task->id }})" class="text-gray-400 hover:text-red-500 p-1">
+                                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    @endif
                                 </li>
                             @empty
                                 <div class="text-center py-8">
