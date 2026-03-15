@@ -1,8 +1,19 @@
 <x-slot name="header">
     <div class="flex justify-between items-center">
-        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-            {{ $event->title }}
-        </h2>
+        <div class="flex items-center gap-3">
+            <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
+                {{ $event->title }}
+            </h2>
+            
+            <!-- Role Badge -->
+            <span class="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest shadow-sm
+                {{ $userRole === 'owner' ? 'bg-amber-100 text-amber-700 border border-amber-200' : '' }}
+                {{ $userRole === 'organizer' ? 'bg-indigo-100 text-indigo-700 border border-indigo-200' : '' }}
+                {{ $userRole === 'guest' ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : '' }}
+            ">
+                {{ $userRole }}
+            </span>
+        </div>
         <a href="{{ route('dashboard') }}" class="text-sm text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300">
             &larr; Back to Dashboard
         </a>
@@ -63,12 +74,25 @@
 
                         @if($this->hasPermission('manage_tasks'))
                         <!-- Add Task Form -->
-                        <form wire:submit.prevent="addTask" class="flex gap-2 mb-8">
-                            <input type="text" wire:model="newTaskTitle" placeholder="What needs to be done?" class="flex-1 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-indigo-500 dark:focus:border-indigo-500">
-                            <input type="date" wire:model="newTaskDueDate" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                            <button type="submit" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 focus:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
-                                Add
-                            </button>
+                        <form wire:submit.prevent="addTask" class="flex flex-col gap-3 mb-8 bg-gray-50 dark:bg-gray-700/30 p-4 rounded-xl border border-gray-100 dark:border-gray-600">
+                            <div class="flex gap-2">
+                                <input type="text" wire:model="newTaskTitle" placeholder="What needs to be done?" class="flex-1 bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white">
+                                <input type="date" wire:model="newTaskDueDate" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white text-xs">
+                            </div>
+                            <div class="flex gap-2 items-center">
+                                <div class="flex-1 flex items-center gap-2">
+                                    <span class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Assign to:</span>
+                                    <select wire:model="newTaskAssignedTo" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block p-1.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                        <option value="">Unassigned</option>
+                                        @foreach($eligibleAssignees as $assignee)
+                                            <option value="{{ $assignee->id }}">{{ $assignee->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <button type="submit" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 transition ease-in-out duration-150">
+                                    Add Task
+                                </button>
+                            </div>
                         </form>
                         @endif
 
@@ -115,15 +139,26 @@
                             @forelse ($tasks as $task)
                                 <li class="p-4 bg-gray-50 dark:bg-gray-900/50 rounded-lg group">
                                     @if($editingTaskId === $task->id)
-                                        <div class="space-y-3">
+                                        <div class="space-y-3 bg-white dark:bg-gray-800 p-4 rounded-lg border border-indigo-200 dark:border-indigo-800 shadow-sm transition-all">
                                             <div class="flex gap-2">
                                                 <input type="text" wire:model="editTaskTitle" class="flex-1 bg-white border border-gray-300 text-gray-900 text-sm rounded-md focus:ring-indigo-500 focus:border-indigo-500 block w-full p-2 dark:bg-gray-800 dark:border-gray-700 dark:text-white" placeholder="Task title">
                                                 <input type="date" wire:model="editTaskDueDate" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-md focus:ring-indigo-500 focus:border-indigo-500 block p-2 dark:bg-gray-800 dark:border-gray-700 dark:text-white">
                                             </div>
                                             <textarea wire:model="editTaskDescription" rows="2" class="w-full bg-white border border-gray-300 text-gray-900 text-sm rounded-md focus:ring-indigo-500 focus:border-indigo-500 block p-2 dark:bg-gray-800 dark:border-gray-700 dark:text-white" placeholder="Add details or notes..."></textarea>
+                                            
+                                            <div class="flex items-center gap-2">
+                                                <span class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Assign to:</span>
+                                                <select wire:model="editTaskAssignedTo" class="bg-white border border-gray-300 text-gray-900 text-xs rounded-md focus:ring-indigo-500 focus:border-indigo-500 block p-1 dark:bg-gray-800 dark:border-gray-700 dark:text-white">
+                                                    <option value="">Unassigned</option>
+                                                    @foreach($eligibleAssignees as $assignee)
+                                                        <option value="{{ $assignee->id }}">{{ $assignee->name }}</option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+
                                             <div class="flex justify-end gap-2 pt-1">
                                                 <button wire:click="cancelEditTask" class="px-3 py-1.5 text-xs font-semibold text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200">Cancel</button>
-                                                <button wire:click="saveTask" class="inline-flex items-center px-3 py-1.5 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white tracking-widest hover:bg-indigo-700 focus:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">Save</button>
+                                                <button wire:click="saveTask" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white tracking-widest hover:bg-indigo-700 transition ease-in-out duration-150 shadow-sm shadow-indigo-200 dark:shadow-none">Save Changes</button>
                                             </div>
                                         </div>
                                     @else
@@ -139,11 +174,66 @@
                                                     @if ($task->description)
                                                         <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 {{ $task->completed ? 'opacity-50' : '' }}">{{ $task->description }}</p>
                                                     @endif
-                                                    @if ($task->due_date)
-                                                        <p class="text-xs text-indigo-500 dark:text-indigo-400 mt-1 font-medium {{ $task->completed ? 'opacity-50' : '' }}">
-                                                            <svg class="inline w-3.5 h-3.5 mr-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                                                            {{ \Carbon\Carbon::parse($task->due_date)->format('M d, Y') }}
-                                                        </p>
+                                                    
+                                                    <div class="flex flex-wrap items-center gap-3 mt-2">
+                                                        @if ($task->due_date)
+                                                            <p class="text-[10px] text-indigo-500 dark:text-indigo-400 font-bold uppercase flex items-center gap-1 {{ $task->completed ? 'opacity-50' : '' }}">
+                                                                <span class="material-symbols-outlined text-sm">calendar_today</span>
+                                                                {{ \Carbon\Carbon::parse($task->due_date)->format('M d, Y') }}
+                                                            </p>
+                                                        @endif
+
+                                                        @if($task->assignee)
+                                                            <div class="flex items-center gap-1.5">
+                                                                <div class="h-5 w-5 rounded-full bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center text-indigo-700 dark:text-indigo-300 font-bold text-[10px]">
+                                                                    {{ substr($task->assignee->name, 0, 1) }}
+                                                                </div>
+                                                                <span class="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-tight">{{ $task->assignee->name }}</span>
+                                                                
+                                                                <!-- Status Badge -->
+                                                                <span class="text-[8px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider
+                                                                    {{ $task->assignment_status === 'pending' ? 'bg-amber-50 text-amber-600 border border-amber-100' : '' }}
+                                                                    {{ $task->assignment_status === 'accepted' ? 'bg-indigo-50 text-indigo-600 border border-indigo-100' : '' }}
+                                                                    {{ $task->assignment_status === 'declined' ? 'bg-rose-50 text-rose-600 border border-rose-100' : '' }}
+                                                                    {{ $task->assignment_status === 'completed' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : '' }}
+                                                                ">
+                                                                    {{ $task->assignment_status }}
+                                                                </span>
+                                                            </div>
+                                                        @endif
+                                                    </div>
+
+                                                    <!-- Completion Comment -->
+                                                    @if($task->completion_comment)
+                                                        <div class="mt-3 p-3 bg-gray-50 dark:bg-gray-800/40 rounded-xl border border-gray-100 dark:border-gray-700 italic text-[11px] text-gray-500 dark:text-gray-400 flex items-start gap-2">
+                                                            <span class="material-symbols-outlined text-gray-300 text-sm">chat_bubble</span>
+                                                            "{{ $task->completion_comment }}"
+                                                        </div>
+                                                    @endif
+
+                                                    <!-- Interaction for Assigned User -->
+                                                    @if($task->assigned_to === auth()->id() && !$task->completed)
+                                                        <div class="mt-4 flex flex-wrap items-center gap-3">
+                                                            @if($task->assignment_status === 'pending')
+                                                                <button wire:click="acceptTask({{ $task->id }})" class="bg-[#257bf4] hover:bg-[#257bf4]/90 text-white text-[10px] font-black px-4 py-1.5 rounded-lg uppercase tracking-widest transition-all shadow-md shadow-blue-500/10 active:scale-95">Accept Task</button>
+                                                                <button wire:click="declineTask({{ $task->id }})" class="bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 text-gray-600 dark:text-gray-300 text-[10px] font-black px-4 py-1.5 rounded-lg uppercase tracking-widest transition-all active:scale-95">Decline</button>
+                                                            @elseif($task->assignment_status === 'accepted')
+                                                                @if($completingTaskId === $task->id)
+                                                                    <div class="w-full space-y-3 mt-2 bg-white dark:bg-gray-800/50 p-3 rounded-xl border border-indigo-50 dark:border-indigo-900/30">
+                                                                        <textarea wire:model="completionComment" placeholder="Add a comment on completion (optional)..." class="w-full bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-xs rounded-lg p-2.5 focus:ring-indigo-500"></textarea>
+                                                                        <div class="flex gap-3">
+                                                                            <button wire:click="completeTask" class="bg-emerald-500 hover:bg-emerald-600 text-white text-[10px] font-black px-4 py-2 rounded-lg uppercase tracking-widest shadow-md shadow-emerald-500/10 active:scale-95">Submit Completion</button>
+                                                                            <button wire:click="$set('completingTaskId', null)" class="text-xs text-gray-500 underline decoration-dotted underline-offset-4">Cancel</button>
+                                                                        </div>
+                                                                    </div>
+                                                                @else
+                                                                    <button wire:click="startCompletion({{ $task->id }})" class="text-[#257bf4] dark:text-blue-400 hover:text-[#257bf4]/80 text-[10px] font-black px-2 py-1 rounded-md uppercase tracking-widest flex items-center gap-1.5 transition-all group/btn">
+                                                                        <span class="material-symbols-outlined text-[16px] group-hover/btn:scale-110 transition-transform">check_circle</span>
+                                                                        Mark as Complete
+                                                                    </button>
+                                                                @endif
+                                                            @endif
+                                                        </div>
                                                     @endif
                                                 </div>
                                             </div>
@@ -166,7 +256,11 @@
                                 </div>
                             @endforelse
                         </ul>
-                    </div>
+                </div>
+
+                <!-- Media Library Section -->
+                <div class="mt-8">
+                    <livewire:events.media-library :event="$event" :user-permissions="$userPermissions" :user-role="$userRole" />
                 </div>
             </div>
 

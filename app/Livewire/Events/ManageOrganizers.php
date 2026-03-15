@@ -17,6 +17,8 @@ class ManageOrganizers extends Component
         'edit_event' => 'Edit Event Details',
         'manage_invites' => 'Manage Invitations',
         'manage_tasks' => 'Manage Tasks',
+        'assign_tasks' => 'Assign Tasks',
+        'manage_files' => 'Manage Files',
         'view_rsvps' => 'View RSVPs',
     ];
 

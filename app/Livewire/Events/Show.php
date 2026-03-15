@@ -6,54 +6,75 @@ use Livewire\Component;
 use App\Models\Event;
 use App\Models\Task;
 use App\Models\RSVP;
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 
 class Show extends Component
 {
     public Event $event;
     public $userPermissions = [];
+    public $userRole = null; // owner, organizer, guest
     
     // Add task properties
     public $newTaskTitle;
     public $newTaskDueDate;
+    public $newTaskAssignedTo;
     
     // Edit task properties
     public $editingTaskId = null;
     public $editTaskTitle;
     public $editTaskDueDate;
     public $editTaskDescription;
+    public $editTaskAssignedTo;
     
+    // Completion property
+    public $completionComment;
+    public $completingTaskId = null;
+
     // AI Suggestions
     public array $aiSuggestions = [];
 
     protected $rules = [
         'newTaskTitle' => 'required|string|max:255',
         'newTaskDueDate' => 'nullable|date',
+        'newTaskAssignedTo' => 'nullable|exists:users,id',
         'editTaskTitle' => 'required|string|max:255',
         'editTaskDueDate' => 'nullable|date',
         'editTaskDescription' => 'nullable|string',
+        'editTaskAssignedTo' => 'nullable|exists:users,id',
+        'completionComment' => 'nullable|string',
     ];
 
     public function mount(Event $event)
     {
         $this->event = $event;
+        $userId = Auth::id();
         
         // Authorization check
-        if ($event->user_id !== Auth::id()) {
-            $organizer = $event->organizers()->where('user_id', Auth::id())->first();
+        if ($event->user_id !== $userId) {
+            $organizer = $event->organizers()->where('user_id', $userId)->first();
             
             if (!$organizer) {
-                return redirect()->route('events.index')->with('error', 'You do not have access to this event.');
+                // If not an organizer, maybe they are a guest? 
+                // Guests can only view and handle their own assigned tasks.
+                $isGuest = $event->rsvps()->where('user_id', $userId)->where('status', 'attending')->exists();
+                if (!$isGuest) {
+                    return redirect()->route('events.index')->with('error', 'You do not have access to this event.');
+                }
+                $this->userPermissions = ['view_tasks'];
+                $this->userRole = 'guest';
+            } else {
+                $permissions = $organizer->pivot->permissions ?? [];
+                if (!is_array($permissions)) {
+                    $permissions = json_decode($permissions, true) ?? [];
+                }
+                $this->userPermissions = $permissions;
+                $this->userRole = 'organizer';
             }
-            
-            $permissions = $organizer->pivot->permissions ?? [];
-            if (!is_array($permissions)) {
-                $permissions = json_decode($permissions, true) ?? [];
-            }
-            $this->userPermissions = $permissions;
         } else {
             // Owner has all permissions
-            $this->userPermissions = ['edit_event', 'manage_invites', 'manage_tasks', 'view_rsvps', 'owner'];
+            $this->userPermissions = ['edit_event', 'manage_invites', 'manage_tasks', 'assign_tasks', 'manage_files', 'view_rsvps', 'owner'];
+            $this->userRole = 'owner';
         }
     }
 
@@ -117,15 +138,18 @@ class Show extends Component
         $this->validate([
             'newTaskTitle' => 'required|string|max:255',
             'newTaskDueDate' => 'nullable|date',
+            'newTaskAssignedTo' => 'nullable|exists:users,id',
         ]);
 
         $this->event->tasks()->create([
             'title' => $this->newTaskTitle,
             'due_date' => $this->newTaskDueDate,
+            'assigned_to' => $this->newTaskAssignedTo,
+            'assignment_status' => $this->newTaskAssignedTo ? 'pending' : null,
             'completed' => false,
         ]);
 
-        $this->reset(['newTaskTitle', 'newTaskDueDate']);
+        $this->reset(['newTaskTitle', 'newTaskDueDate', 'newTaskAssignedTo']);
         $this->event->refresh();
 
         session()->flash('task_message', 'Task added successfully.');
@@ -141,12 +165,13 @@ class Show extends Component
             $this->editTaskTitle = $task->title;
             $this->editTaskDueDate = $task->due_date ? \Carbon\Carbon::parse($task->due_date)->format('Y-m-d') : null;
             $this->editTaskDescription = $task->description;
+            $this->editTaskAssignedTo = $task->assigned_to;
         }
     }
     
     public function cancelEditTask()
     {
-        $this->reset(['editingTaskId', 'editTaskTitle', 'editTaskDueDate', 'editTaskDescription']);
+        $this->reset(['editingTaskId', 'editTaskTitle', 'editTaskDueDate', 'editTaskDescription', 'editTaskAssignedTo']);
     }
     
     public function saveTask()
@@ -157,15 +182,19 @@ class Show extends Component
             'editTaskTitle' => 'required|string|max:255',
             'editTaskDueDate' => 'nullable|date',
             'editTaskDescription' => 'nullable|string',
+            'editTaskAssignedTo' => 'nullable|exists:users,id',
         ]);
 
         if ($this->editingTaskId) {
             $task = Task::find($this->editingTaskId);
             if ($task && $task->event_id === $this->event->id) {
+                $oldAssignedTo = $task->assigned_to;
                 $task->update([
                     'title' => $this->editTaskTitle,
                     'due_date' => $this->editTaskDueDate,
                     'description' => $this->editTaskDescription,
+                    'assigned_to' => $this->editTaskAssignedTo,
+                    'assignment_status' => ($this->editTaskAssignedTo && $this->editTaskAssignedTo != $oldAssignedTo) ? 'pending' : $task->assignment_status,
                 ]);
             }
         }
@@ -209,12 +238,76 @@ class Show extends Component
         session()->flash('rsvp_message', 'RSVP updated.');
     }
 
+    // Task Assignment Handlers
+    public function acceptTask($taskId)
+    {
+        $task = Task::find($taskId);
+        if ($task && $task->assigned_to === Auth::id()) {
+            $task->update(['assignment_status' => 'accepted']);
+            $this->event->refresh();
+        }
+    }
+
+    public function declineTask($taskId)
+    {
+        $task = Task::find($taskId);
+        if ($task && $task->assigned_to === Auth::id()) {
+            $task->update(['assignment_status' => 'declined']);
+            $this->event->refresh();
+        }
+    }
+
+    public function startCompletion($taskId)
+    {
+        $task = Task::find($taskId);
+        if ($task && $task->assigned_to === Auth::id()) {
+            $this->completingTaskId = $taskId;
+            $this->completionComment = '';
+        }
+    }
+
+    public function completeTask()
+    {
+        $this->validate(['completionComment' => 'nullable|string']);
+
+        if ($this->completingTaskId) {
+            $task = Task::find($this->completingTaskId);
+            if ($task && $task->assigned_to === Auth::id()) {
+                $task->update([
+                    'completed' => true,
+                    'assignment_status' => 'completed',
+                    'completion_comment' => $this->completionComment,
+                ]);
+            }
+        }
+
+        $this->reset(['completingTaskId', 'completionComment']);
+        $this->event->refresh();
+        session()->flash('task_message', 'Task completed!');
+    }
+
+    public function getEligibleAssigneesProperty()
+    {
+        // Eligible: Organizers + Accepted (Attending) Guests
+        $organizerIds = $this->event->organizers()->pluck('users.id')->toArray();
+        $guestIds = $this->event->rsvps()->where('status', 'attending')->pluck('user_id')->toArray();
+        
+        $allIds = array_unique(array_merge($organizerIds, $guestIds));
+        
+        return User::whereIn('id', $allIds)->get();
+    }
+
     public function render()
     {
         return view('livewire.events.show', [
-            'tasks' => $this->event->tasks()->orderBy('completed')->orderBy('due_date')->get(),
+            'tasks' => $this->event->tasks()
+                ->with('assignee')
+                ->orderBy('completed')
+                ->orderBy('due_date')
+                ->get(),
             'rsvps' => $this->event->rsvps()->with('user')->get(),
             'userRSVP' => RSVP::where('event_id', $this->event->id)->where('user_id', Auth::id())->first(),
+            'eligibleAssignees' => $this->eligibleAssignees,
         ])->layout('layouts.app');
     }
 }

@@ -12,6 +12,9 @@ class Task extends Model
         'completed',
         'due_date',
         'event_id',
+        'assigned_to',
+        'assignment_status',
+        'completion_comment',
     ];
 
     /**
@@ -20,5 +23,13 @@ class Task extends Model
     public function event()
     {
         return $this->belongsTo(Event::class);
+    }
+
+    /**
+     * Get the user assigned to the task.
+     */
+    public function assignee()
+    {
+        return $this->belongsTo(User::class, 'assigned_to');
     }
 }

@@ -12,6 +12,12 @@ class Event extends Model
         'date',
         'location',
         'user_id',
+        'settings',
+    ];
+
+    protected $casts = [
+        'settings' => 'array',
+        'date' => 'datetime',
     ];
 
     /**
@@ -55,5 +61,21 @@ class Event extends Model
             ->using(EventOrganizer::class)
             ->withPivot('permissions')
             ->withTimestamps();
+    }
+
+    /**
+     * Get the media for the event.
+     */
+    public function media()
+    {
+        return $this->hasMany(EventMedia::class);
+    }
+
+    /**
+     * Get a setting value.
+     */
+    public function getSetting($key, $default = null)
+    {
+        return $this->settings[$key] ?? $default;
     }
 }
