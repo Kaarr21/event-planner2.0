@@ -33,11 +33,35 @@
                         </div>
                         
                         @if($event->user_id !== auth()->id())
-                            <div class="mb-4">
-                                <span class="bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 text-[10px] font-bold px-2 py-1 rounded-md uppercase tracking-wider flex items-center gap-1 w-fit">
-                                    <span class="material-symbols-outlined text-[14px]">id_card</span>
-                                    Organizer
-                                </span>
+                            <div class="mb-4 flex flex-wrap gap-2">
+                                @if($event->organizers->contains('id', auth()->id()))
+                                    <span class="bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 text-[10px] font-bold px-2 py-1 rounded-md uppercase tracking-wider flex items-center gap-1 w-fit">
+                                        <span class="material-symbols-outlined text-[14px]">id_card</span>
+                                        Organizer
+                                    </span>
+                                @endif
+
+                                @php
+                                    $userRSVP = $event->rsvps->where('user_id', auth()->id())->first();
+                                @endphp
+
+                                @if($userRSVP && ($userRSVP->status === 'attending' || $userRSVP->status === 'maybe'))
+                                    <span class="bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold px-2 py-1 rounded-md uppercase tracking-wider flex items-center gap-1 w-fit border border-emerald-200 dark:border-emerald-800">
+                                        <span class="material-symbols-outlined text-[14px]">check_circle</span>
+                                        Guest
+                                    </span>
+                                @endif
+
+                                @php
+                                    $pendingInvite = $event->receivedInvites->where('status', 'pending')->first();
+                                @endphp
+
+                                @if($pendingInvite)
+                                    <span class="bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 text-[10px] font-bold px-2 py-1 rounded-md uppercase tracking-wider flex items-center gap-1 w-fit border border-amber-200 dark:border-amber-800 animate-pulse">
+                                        <span class="material-symbols-outlined text-[14px]">mail</span>
+                                        Invited
+                                    </span>
+                                @endif
                             </div>
                         @endif
                         

@@ -13,7 +13,8 @@ class Show extends Component
 {
     public Event $event;
     public $userPermissions = [];
-    public $userRole = null; // owner, organizer, guest
+    public $userRole = null; // owner, organizer, guest, invited
+    public $inviter = null;
     
     // Add task properties
     public $newTaskTitle;
@@ -48,21 +49,35 @@ class Show extends Component
     public function mount(Event $event)
     {
         $this->event = $event;
+        $this->authorizeUser();
+    }
+
+    protected function authorizeUser()
+    {
         $userId = Auth::id();
         
         // Authorization check
-        if ($event->user_id !== $userId) {
-            $organizer = $event->organizers()->where('user_id', $userId)->first();
+        if ($this->event->user_id !== $userId) {
+            $organizer = $this->event->organizers()->where('user_id', $userId)->first();
             
             if (!$organizer) {
-                // If not an organizer, maybe they are a guest? 
-                // Guests can only view and handle their own assigned tasks.
-                $isGuest = $event->rsvps()->where('user_id', $userId)->where('status', 'attending')->exists();
-                if (!$isGuest) {
+                // If not an organizer, maybe they are a guest or have an invite?
+                $isGuest = $this->event->rsvps()
+                    ->where('user_id', $userId)
+                    ->whereIn('status', ['attending', 'maybe'])
+                    ->exists();
+                $invite = $this->event->invites()->where('invitee_id', $userId)->where('status', 'pending')->first();
+                
+                if (!$isGuest && !$invite) {
                     return redirect()->route('events.index')->with('error', 'You do not have access to this event.');
                 }
+                
                 $this->userPermissions = ['view_tasks'];
-                $this->userRole = 'guest';
+                $this->userRole = $isGuest ? 'guest' : 'invited';
+
+                if ($invite) {
+                    $this->inviter = $invite->inviter;
+                }
             } else {
                 $permissions = $organizer->pivot->permissions ?? [];
                 if (!is_array($permissions)) {
@@ -234,7 +249,17 @@ class Show extends Component
             ['status' => $status]
         );
 
+        // Sync pending invitation status
+        \App\Models\Invite::where('event_id', $this->event->id)
+            ->where('invitee_id', Auth::id())
+            ->where('status', 'pending')
+            ->update([
+                'status' => ($status === 'declined' ? 'declined' : 'accepted'),
+                'responded_at' => now(),
+            ]);
+
         $this->event->refresh();
+        $this->authorizeUser(); // Update permissions and role instantly
         session()->flash('rsvp_message', 'RSVP updated.');
     }
 

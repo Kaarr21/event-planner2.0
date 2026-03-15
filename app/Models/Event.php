@@ -53,6 +53,14 @@ class Event extends Model
     }
 
     /**
+     * Alias for invites, often used when filtering for the current user.
+     */
+    public function receivedInvites()
+    {
+        return $this->hasMany(Invite::class);
+    }
+
+    /**
      * Get the organizers for the event.
      */
     public function organizers()

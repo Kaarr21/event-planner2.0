@@ -153,28 +153,34 @@ class MediaLibrary extends Component
 
     public function render()
     {
-        $query = $this->event->media()->where('folder_type', $this->activeFolder);
-
-        // Security filtering
         if ($this->userRole === 'guest' && !$this->hasPermission('manage_files')) {
-            if ($this->activeFolder === 'shared') {
-                if (!$this->allowGuestViewShared) {
-                    $media = collect();
-                } else {
-                    $query->where(function($q) {
-                        $q->where('visibility', 'public')
-                          ->orWhere('user_id', Auth::id())
-                          ->orWhereHas('authorizedUsers', function($sq) {
-                              $sq->where('user_id', Auth::id());
-                          });
+            $mediaQuery = $this->event->media();
+            
+            $mediaQuery->where(function($q) {
+                // 1. Files in 'shared' folder that are 'public' (if vision is on)
+                if ($this->allowGuestViewShared) {
+                    $q->where(function($sq) {
+                        $sq->where('folder_type', 'shared')
+                          ->where('visibility', 'public');
                     });
-                    $media = $query->latest()->get();
                 }
-            } else {
-                $media = collect();
-            }
+                
+                // 2. Files I uploaded myself (regardless of folder)
+                $q->orWhere('user_id', Auth::id());
+                
+                // 3. Files specifically restricted to me (regardless of folder)
+                $q->orWhereHas('authorizedUsers', function($sq) {
+                    $sq->where('user_id', Auth::id());
+                });
+            });
+            
+            $media = $mediaQuery->latest()->get();
         } else {
-            $media = $query->latest()->get();
+            // Owners/Organizers see everything in the current folder
+            $media = $this->event->media()
+                ->where('folder_type', $this->activeFolder)
+                ->latest()
+                ->get();
         }
 
         return view('livewire.events.media-library', [

@@ -17,7 +17,23 @@ class Index extends Component
                 $query->where('user_id', $userId)
                       ->whereNotNull('permissions');
             })
+            ->orWhereHas('receivedInvites', function ($query) use ($userId) {
+                $query->where('invitee_id', $userId)
+                      ->where('status', 'pending');
+            })
+            ->orWhereHas('rsvps', function ($query) use ($userId) {
+                $query->where('user_id', $userId)
+                      ->whereIn('status', ['attending', 'maybe']);
+            })
             ->withCount('rsvps')
+            ->with([
+                'receivedInvites' => function($query) use ($userId) {
+                    $query->where('invitee_id', $userId);
+                },
+                'rsvps' => function($query) use ($userId) {
+                    $query->where('user_id', $userId);
+                }
+            ])
             ->latest()
             ->get();
 

@@ -55,10 +55,13 @@ class RegisteredUserController extends Controller
                 'user_id' => $user->id,
                 'type' => 'invite',
                 'title' => 'New Event Invitation',
-                'message' => $invite->inviter->name . " has invited you to: " . $invite->event->title,
+                'message' => ($invite->inviter->name ?? 'Someone') . " has invited you to: " . $invite->event->title,
                 'related_id' => $invite->id,
             ]);
         }
+
+        // Also check if they were added as an organizer by email (if that logic exists/is added later)
+        // For now, we focus on the invitations appearing on dashboard.
 
         event(new Registered($user));
 
