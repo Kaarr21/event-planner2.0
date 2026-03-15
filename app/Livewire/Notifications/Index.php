@@ -71,7 +71,7 @@ class Index extends Component
     public function render()
     {
         return view('livewire.notifications.index', [
-            'notifications' => Notification::where('user_id', Auth::id())->latest()->get(),
+            'notifications' => Notification::where('user_id', Auth::id())->with('invite')->latest()->get(),
             'unreadCount' => Notification::where('user_id', Auth::id())->where('read', false)->count(),
         ])->layout('layouts.app');
     }

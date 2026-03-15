@@ -53,10 +53,16 @@
                     @if(auth()->id() === $event->user_id)
                     <div class="flex flex-wrap gap-x-4 gap-y-2 mt-1">
                         @foreach($availablePermissions as $key => $label)
+                            @php
+                                $perms = $organizer->pivot->permissions ?? [];
+                                if (!is_array($perms)) {
+                                    $perms = json_decode($perms, true) ?? [];
+                                }
+                            @endphp
                             <label class="inline-flex items-center text-xs text-gray-500">
                                 <input type="checkbox" 
-                                    wire:change="updatePermissions({{ $organizer->id }}, $event.target.checked ? [...JSON.parse('{{ json_encode($organizer->pivot->permissions ?? []) }}'), '{{ $key }}'] : JSON.parse('{{ json_encode($organizer->pivot->permissions ?? []) }}').filter(p => p !== '{{ $key }}'))"
-                                    {{ in_array($key, $organizer->pivot->permissions ?? []) ? 'checked' : '' }}
+                                    wire:click="togglePermission({{ $organizer->id }}, '{{ $key }}')"
+                                    {{ in_array($key, $perms) ? 'checked' : '' }}
                                     class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500 mr-1.5 w-3 h-3">
                                 {{ $label }}
                             </label>
@@ -64,7 +70,13 @@
                     </div>
                     @else
                     <div class="flex flex-wrap gap-2 mt-1">
-                        @foreach($organizer->pivot->permissions ?? [] as $perm)
+                        @php
+                            $perms = $organizer->pivot->permissions ?? [];
+                            if (!is_array($perms)) {
+                                $perms = json_decode($perms, true) ?? [];
+                            }
+                        @endphp
+                        @foreach($perms as $perm)
                             <span class="text-[10px] bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 px-2 py-0.5 rounded-full capitalize">
                                 {{ str_replace('_', ' ', $perm) }}
                             </span>

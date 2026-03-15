@@ -46,6 +46,7 @@
                     <div class="p-6">
                         <div class="flex justify-between items-center mb-6">
                             <h3 class="text-lg font-bold text-gray-900 dark:text-white">Tasks Checklist</h3>
+                            @if($this->hasPermission('manage_tasks'))
                             <div class="flex items-center gap-4">
                                 <button type="button" wire:click="suggestAITasks" class="text-xs text-indigo-600 hover:text-indigo-900 font-semibold flex items-center">
                                     <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
@@ -57,8 +58,10 @@
                                     <span class="text-sm text-green-600">{{ session('task_message') }}</span>
                                 @endif
                             </div>
+                            @endif
                         </div>
 
+                        @if($this->hasPermission('manage_tasks'))
                         <!-- Add Task Form -->
                         <form wire:submit.prevent="addTask" class="flex gap-2 mb-8">
                             <input type="text" wire:model="newTaskTitle" placeholder="What needs to be done?" class="flex-1 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-indigo-500 dark:focus:border-indigo-500">
@@ -67,6 +70,7 @@
                                 Add
                             </button>
                         </form>
+                        @endif
 
                         <!-- AI Suggestions Section -->
                         @if (!empty($aiSuggestions))
@@ -143,7 +147,7 @@
                                                     @endif
                                                 </div>
                                             </div>
-                                            <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <div class="flex items-center gap-2 {{ !$this->hasPermission('manage_tasks') ? 'hidden' : 'opacity-0 group-hover:opacity-100' }} transition-opacity">
                                                 <button wire:click="startEditTask({{ $task->id }})" class="text-gray-400 hover:text-indigo-500 p-1">
                                                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                                                 </button>
@@ -223,25 +227,22 @@
                 </div>
 
                 <!-- Invite Form -->
-                <livewire:events.invite-form :event="$event" />
+                @if($this->hasPermission('manage_invites'))
+                    <livewire:events.invite-form :event="$event" />
+                @endif
 
                 <!-- Event Management (Owner/Organizers) -->
-                @php
-                    $isCreator = auth()->id() === $event->user_id;
-                    $organizer = $event->organizers()->where('user_id', auth()->id())->first();
-                    $permissions = $organizer ? (is_array($organizer->pivot->permissions) ? $organizer->pivot->permissions : json_decode($organizer->pivot->permissions, true) ?? []) : [];
-                    $canManageInvites = $isCreator || in_array('manage_invites', $permissions);
-                @endphp
-
-                @if($isCreator || !empty($permissions))
+                @if($this->hasPermission('manage_invites') || $this->hasPermission('owner'))
                     <div class="pt-8 mt-8 border-t border-gray-200 dark:border-gray-700">
                         <h4 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">Management</h4>
                         <div class="space-y-8">
-                            @if($canManageInvites)
+                            @if($this->hasPermission('manage_invites'))
                                 <livewire:events.invited-list :event="$event" />
                             @endif
 
-                            <livewire:events.manage-organizers :event="$event" />
+                            @if($this->hasPermission('owner'))
+                                <livewire:events.manage-organizers :event="$event" />
+                            @endif
                         </div>
                     </div>
                 @endif

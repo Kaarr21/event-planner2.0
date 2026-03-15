@@ -32,6 +32,15 @@
                             </h3>
                         </div>
                         
+                        @if($event->user_id !== auth()->id())
+                            <div class="mb-4">
+                                <span class="bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 text-[10px] font-bold px-2 py-1 rounded-md uppercase tracking-wider flex items-center gap-1 w-fit">
+                                    <span class="material-symbols-outlined text-[14px]">id_card</span>
+                                    Organizer
+                                </span>
+                            </div>
+                        @endif
+                        
                         <div class="space-y-3 mt-4">
                             <div class="flex items-center gap-3 text-gray-600 dark:text-slate-400 text-sm font-medium">
                                 <span class="material-symbols-outlined text-[#257bf4] text-xl">calendar_month</span>

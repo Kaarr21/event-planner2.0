@@ -50,7 +50,7 @@ class ManageOrganizers extends Component
         }
 
         $this->event->organizers()->attach($user->id, [
-            'permissions' => json_encode($this->selectedPermissions),
+            'permissions' => $this->selectedPermissions,
         ]);
 
         Notification::create([
@@ -71,12 +71,27 @@ class ManageOrganizers extends Component
         session()->flash('organizer_message', 'Organizer removed.');
     }
 
-    public function updatePermissions($userId, $permissions)
+    public function togglePermission($userId, $permission)
     {
-        $this->event->organizers()->updateExistingPivot($userId, [
-            'permissions' => json_encode($permissions),
-        ]);
-        session()->flash('organizer_message', 'Permissions updated.');
+        $organizer = $this->event->organizers()->where('user_id', $userId)->first();
+        if ($organizer) {
+            $permissions = $organizer->pivot->permissions ?? [];
+            if (!is_array($permissions)) {
+                $permissions = json_decode($permissions, true) ?? [];
+            }
+
+            if (in_array($permission, $permissions)) {
+                $permissions = array_values(array_diff($permissions, [$permission]));
+            } else {
+                $permissions[] = $permission;
+            }
+
+            $this->event->organizers()->updateExistingPivot($userId, [
+                'permissions' => $permissions,
+            ]);
+            
+            session()->flash('organizer_message', 'Permissions updated.');
+        }
     }
 
     public function render()

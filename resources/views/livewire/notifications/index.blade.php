@@ -35,7 +35,7 @@
                         </p>
                         
                         <div class="flex gap-3">
-                            @if($notification->type === 'invite' && !$notification->read)
+                            @if($notification->type === 'invite' && $notification->invite?->status === 'pending')
                                 <button wire:click="acceptInvite({{ $notification->id }})" class="px-6 py-2 bg-[#257bf4] text-white text-xs font-bold rounded-lg hover:brightness-110 transition-all shadow-md shadow-[#257bf4]/10 flex items-center gap-2 uppercase tracking-wider">
                                     <span class="material-symbols-outlined text-sm">check</span>
                                     Accept

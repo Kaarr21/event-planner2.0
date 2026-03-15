@@ -16,10 +16,10 @@ class Notification extends Model
     ];
 
     /**
-     * Get the user that owns the notification.
+     * Get the invite related to the notification.
      */
-    public function user()
+    public function invite()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(Invite::class, 'related_id');
     }
 }

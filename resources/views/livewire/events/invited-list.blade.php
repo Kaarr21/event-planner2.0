@@ -10,8 +10,8 @@
                 <div class="flex items-center justify-between py-3 border-b border-gray-100 dark:border-gray-700 last:border-0">
                     <div class="flex flex-col">
                         <span class="text-sm font-medium text-gray-900 dark:text-white">{{ $invite->invitee_email }}</span>
-                        @if($invite->invitee)
-                            <span class="text-[10px] text-gray-500">Registered: {{ $invite->invitee->name }}</span>
+                        @if($invite->invitee_id)
+                            <span class="text-[10px] text-green-600 font-medium">Registered: {{ $invite->invitee?->name ?? 'User Found' }}</span>
                         @else
                             <span class="text-[10px] text-amber-600 italic">Account not registered</span>
                         @endif

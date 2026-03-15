@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Auth;
 class Show extends Component
 {
     public Event $event;
+    public $userPermissions = [];
     
     // Add task properties
     public $newTaskTitle;
@@ -33,8 +34,42 @@ class Show extends Component
         'editTaskDescription' => 'nullable|string',
     ];
 
+    public function mount(Event $event)
+    {
+        $this->event = $event;
+        
+        // Authorization check
+        if ($event->user_id !== Auth::id()) {
+            $organizer = $event->organizers()->where('user_id', Auth::id())->first();
+            
+            if (!$organizer) {
+                return redirect()->route('events.index')->with('error', 'You do not have access to this event.');
+            }
+            
+            $permissions = $organizer->pivot->permissions ?? [];
+            if (!is_array($permissions)) {
+                $permissions = json_decode($permissions, true) ?? [];
+            }
+            $this->userPermissions = $permissions;
+        } else {
+            // Owner has all permissions
+            $this->userPermissions = ['edit_event', 'manage_invites', 'manage_tasks', 'view_rsvps', 'owner'];
+        }
+    }
+
+    public function hasPermission($permission)
+    {
+        $perms = $this->userPermissions ?: [];
+        if (!is_array($perms)) {
+            $perms = [];
+        }
+        return in_array($permission, $perms) || in_array('owner', $perms);
+    }
+
     public function suggestAITasks(\App\Services\AIService $aiService)
     {
+        if (!$this->hasPermission('manage_tasks')) return;
+        
         $suggestions = $aiService->suggestTasks($this->event->title, $this->event->description ?: '');
         
         $this->aiSuggestions = array_map(function($title) {
@@ -46,6 +81,8 @@ class Show extends Component
     
     public function removeSuggestion($index)
     {
+        if (!$this->hasPermission('manage_tasks')) return;
+        
         if (isset($this->aiSuggestions[$index])) {
             unset($this->aiSuggestions[$index]);
             // Reindex array
@@ -55,6 +92,8 @@ class Show extends Component
     
     public function saveSuggestions()
     {
+        if (!$this->hasPermission('manage_tasks')) return;
+        
         $count = 0;
         foreach ($this->aiSuggestions as $suggestion) {
             if ($suggestion['selected'] && !empty($suggestion['title'])) {
@@ -71,13 +110,10 @@ class Show extends Component
         session()->flash('task_message', $count . ' AI suggested tasks added!');
     }
 
-    public function mount(Event $event)
-    {
-        $this->event = $event;
-    }
-
     public function addTask()
     {
+        if (!$this->hasPermission('manage_tasks')) return;
+
         $this->validate([
             'newTaskTitle' => 'required|string|max:255',
             'newTaskDueDate' => 'nullable|date',
@@ -97,6 +133,8 @@ class Show extends Component
     
     public function startEditTask($taskId)
     {
+        if (!$this->hasPermission('manage_tasks')) return;
+
         $task = Task::find($taskId);
         if ($task && $task->event_id === $this->event->id) {
             $this->editingTaskId = $task->id;
@@ -113,6 +151,8 @@ class Show extends Component
     
     public function saveTask()
     {
+        if (!$this->hasPermission('manage_tasks')) return;
+
         $this->validate([
             'editTaskTitle' => 'required|string|max:255',
             'editTaskDueDate' => 'nullable|date',
@@ -137,6 +177,8 @@ class Show extends Component
 
     public function toggleTask($taskId)
     {
+        if (!$this->hasPermission('manage_tasks')) return;
+
         $task = Task::find($taskId);
         if ($task && $task->event_id === $this->event->id) {
             $task->completed = !$task->completed;
@@ -147,6 +189,8 @@ class Show extends Component
 
     public function deleteTask($taskId)
     {
+        if (!$this->hasPermission('manage_tasks')) return;
+
         $task = Task::find($taskId);
         if ($task && $task->event_id === $this->event->id) {
             $task->delete();

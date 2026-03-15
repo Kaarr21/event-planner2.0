@@ -2,6 +2,16 @@
     <div class="p-6">
         <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Invite Guests</h3>
         
+        @if (session()->has('invite_warning'))
+            <div class="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                <p class="text-xs text-amber-800 mb-2">{{ session('invite_warning') }}</p>
+                <div class="flex gap-2">
+                    <button type="button" wire:click="resendInvite" class="px-3 py-1 bg-amber-600 text-white rounded text-[10px] font-bold uppercase hover:bg-amber-700">Resend Anyway</button>
+                    <button type="button" wire:click="$reset" class="px-3 py-1 bg-white border border-gray-300 text-gray-600 rounded text-[10px] font-bold uppercase">Cancel</button>
+                </div>
+            </div>
+        @endif
+
         <form wire:submit.prevent="invite" class="space-y-4">
             <div>
                 <x-input-label for="email" :value="__('Email Address')" />

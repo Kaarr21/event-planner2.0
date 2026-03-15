@@ -29,28 +29,44 @@ class InviteForm extends Component
     {
         $this->validate();
 
-        // Check if already invited
-        if (Invite::where('event_id', $this->event->id)->where('invitee_email', $this->email)->exists()) {
-            $this->addError('email', 'This person has already been invited.');
+        $existingInvite = Invite::where('event_id', $this->event->id)
+            ->where('invitee_email', $this->email)
+            ->first();
+
+        if ($existingInvite && $existingInvite->status !== 'declined') {
+            session()->flash('invite_warning', 'This person has already been invited. Re-inviting will send another email.');
+            $this->dispatch('resend-confirmation');
             return;
         }
 
+        $this->processInvitation();
+    }
+
+    public function resendInvite()
+    {
+        $this->processInvitation();
+    }
+
+    protected function processInvitation()
+    {
         $invitee = User::where('email', $this->email)->first();
 
-        $invite = Invite::create([
-            'event_id' => $this->event->id,
-            'inviter_id' => Auth::id(),
-            'invitee_email' => $this->email,
-            'invitee_id' => $invitee?->id,
-            'message' => $this->message,
-            'status' => 'pending',
-        ]);
+        $invite = Invite::updateOrCreate(
+            ['event_id' => $this->event->id, 'invitee_email' => $this->email],
+            [
+                'inviter_id' => Auth::id(),
+                'invitee_id' => $invitee?->id,
+                'message' => $this->message,
+                'status' => 'pending',
+                'responded_at' => null,
+            ]
+        );
 
         if ($invitee) {
             Notification::create([
                 'user_id' => $invitee->id,
                 'type' => 'invite',
-                'title' => 'New Event Invitation',
+                'title' => 'Event Invitation',
                 'message' => Auth::user()->name . " has invited you to: " . $this->event->title,
                 'related_id' => $invite->id,
             ]);

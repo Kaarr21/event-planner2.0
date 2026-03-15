@@ -10,8 +10,19 @@ class Index extends Component
 {
     public function render()
     {
+        $userId = Auth::id();
+        
+        $events = Event::where('user_id', $userId)
+            ->orWhereHas('organizers', function ($query) use ($userId) {
+                $query->where('user_id', $userId)
+                      ->whereNotNull('permissions');
+            })
+            ->withCount('rsvps')
+            ->latest()
+            ->get();
+
         return view('livewire.events.index', [
-            'events' => Auth::user()->events()->withCount('rsvps')->latest()->get(),
+            'events' => $events,
         ])->layout('layouts.app');
     }
 }

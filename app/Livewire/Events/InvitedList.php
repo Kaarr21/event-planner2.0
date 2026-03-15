@@ -18,8 +18,24 @@ class InvitedList extends Component
 
     public function render()
     {
+        $this->syncInviteeIds();
+
         return view('livewire.events.invited-list', [
             'invites' => $this->event->invites()->latest()->get(),
         ]);
+    }
+
+    protected function syncInviteeIds()
+    {
+        $pendingWithNoId = $this->event->invites()
+            ->whereNull('invitee_id')
+            ->get();
+
+        foreach ($pendingWithNoId as $invite) {
+            $user = \App\Models\User::where('email', $invite->invitee_email)->first();
+            if ($user) {
+                $invite->update(['invitee_id' => $user->id]);
+            }
+        }
     }
 }
