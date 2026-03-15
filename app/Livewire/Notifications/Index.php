@@ -29,6 +29,15 @@ class Index extends Component
                     ['user_id' => Auth::id(), 'event_id' => $invite->event_id],
                     ['status' => 'attending']
                 );
+
+                // Notify Creator
+                \App\Models\Notification::create([
+                    'user_id' => $invite->event->user_id,
+                    'type' => 'invite_accepted',
+                    'title' => 'Invitation Accepted',
+                    'message' => Auth::user()->name . " has accepted the invitation to: " . $invite->event->title,
+                    'related_id' => $invite->event_id,
+                ]);
             }
             $notification->update(['read' => true]);
             session()->flash('message', 'Invitation accepted!');

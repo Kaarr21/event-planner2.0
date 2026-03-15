@@ -56,6 +56,8 @@ class InviteForm extends Component
             ]);
         }
 
+        \Illuminate\Support\Facades\Mail::to($this->email)->send(new \App\Mail\EventInvitation($this->event, Auth::user(), $this->message));
+
         $this->reset(['email', 'message']);
         session()->flash('invite_message', 'Invitation sent to ' . $this->email);
         $this->dispatch('invite-sent');

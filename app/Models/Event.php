@@ -45,4 +45,15 @@ class Event extends Model
     {
         return $this->hasMany(Invite::class);
     }
+
+    /**
+     * Get the organizers for the event.
+     */
+    public function organizers()
+    {
+        return $this->belongsToMany(User::class, 'event_organizers')
+            ->using(EventOrganizer::class)
+            ->withPivot('permissions')
+            ->withTimestamps();
+    }
 }

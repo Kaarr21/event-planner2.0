@@ -87,4 +87,15 @@ class User extends Authenticatable
     {
         return $this->hasMany(Invite::class, 'invitee_id');
     }
+
+    /**
+     * Get the events the user is an organizer for.
+     */
+    public function organizedEvents()
+    {
+        return $this->belongsToMany(Event::class, 'event_organizers')
+            ->using(EventOrganizer::class)
+            ->withPivot('permissions')
+            ->withTimestamps();
+    }
 }

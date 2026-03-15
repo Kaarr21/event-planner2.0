@@ -224,6 +224,27 @@
 
                 <!-- Invite Form -->
                 <livewire:events.invite-form :event="$event" />
+
+                <!-- Event Management (Owner/Organizers) -->
+                @php
+                    $isCreator = auth()->id() === $event->user_id;
+                    $organizer = $event->organizers()->where('user_id', auth()->id())->first();
+                    $permissions = $organizer ? (is_array($organizer->pivot->permissions) ? $organizer->pivot->permissions : json_decode($organizer->pivot->permissions, true) ?? []) : [];
+                    $canManageInvites = $isCreator || in_array('manage_invites', $permissions);
+                @endphp
+
+                @if($isCreator || !empty($permissions))
+                    <div class="pt-8 mt-8 border-t border-gray-200 dark:border-gray-700">
+                        <h4 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">Management</h4>
+                        <div class="space-y-8">
+                            @if($canManageInvites)
+                                <livewire:events.invited-list :event="$event" />
+                            @endif
+
+                            <livewire:events.manage-organizers :event="$event" />
+                        </div>
+                    </div>
+                @endif
             </div>
 
         </div>

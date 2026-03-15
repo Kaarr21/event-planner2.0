@@ -43,6 +43,23 @@ class RegisteredUserController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
+        // Process pending invitations for this email
+        $pendingInvites = \App\Models\Invite::where('invitee_email', $user->email)
+            ->whereNull('invitee_id')
+            ->get();
+
+        foreach ($pendingInvites as $invite) {
+            $invite->update(['invitee_id' => $user->id]);
+
+            \App\Models\Notification::create([
+                'user_id' => $user->id,
+                'type' => 'invite',
+                'title' => 'New Event Invitation',
+                'message' => $invite->inviter->name . " has invited you to: " . $invite->event->title,
+                'related_id' => $invite->id,
+            ]);
+        }
+
         event(new Registered($user));
 
         Auth::login($user);
