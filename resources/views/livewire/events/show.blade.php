@@ -15,6 +15,15 @@
                     {{ $userRole }}
                 </span>
             @endif
+
+            <!-- Status Badge -->
+            <span class="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest shadow-sm border
+                {{ $event->status === 'published' ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : '' }}
+                {{ $event->status === 'draft' ? 'bg-gray-100 text-gray-700 border-gray-200' : '' }}
+                {{ $event->status === 'archived' ? 'bg-rose-100 text-rose-700 border-rose-200' : '' }}
+            ">
+                {{ $event->status }}
+            </span>
         </div>
         <a href="{{ route('dashboard') }}" class="text-sm text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300">
             &larr; Back to Dashboard
@@ -86,6 +95,64 @@
                 @endforeach
             </div>
         </div>
+
+        <!-- Status Controls for Owner -->
+        @if($userRole === 'owner')
+            @if($event->status === 'draft')
+                <div class="mb-8 p-6 bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-500/20 rounded-[2rem] flex flex-col md:flex-row items-center justify-between gap-6 animate-in fade-in slide-in-from-top-4 duration-500">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-600">
+                            <span class="material-symbols-outlined">edit_note</span>
+                        </div>
+                        <div>
+                            <h4 class="text-sm font-black uppercase tracking-tight text-amber-800 dark:text-amber-400">Event is in Draft</h4>
+                            <p class="text-xs text-amber-700/60 dark:text-amber-400/60">Guests and organizers can be added, but they won't be notified until you publish.</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3 w-full md:w-auto">
+                        <button wire:click="publishEvent(true)" class="flex-1 md:flex-none px-6 py-3 bg-amber-600 hover:bg-amber-700 text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-amber-600/20">
+                            Publish & Notify All
+                        </button>
+                        <button wire:click="publishEvent(false)" class="flex-1 md:flex-none px-6 py-3 bg-white dark:bg-white/5 border border-amber-200 dark:border-white/10 text-amber-700 dark:text-amber-400 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all">
+                            Publish Silently
+                        </button>
+                    </div>
+                </div>
+            @elseif($event->status === 'published')
+                <div class="mb-8 p-6 bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-200 dark:border-emerald-500/20 rounded-[2rem] flex flex-col md:flex-row items-center justify-between gap-6 animate-in fade-in slide-in-from-top-4 duration-500">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-600">
+                            <span class="material-symbols-outlined">check_circle</span>
+                        </div>
+                        <div>
+                            <h4 class="text-sm font-black uppercase tracking-tight text-emerald-800 dark:text-emerald-400">Event is Live</h4>
+                            <p class="text-xs text-emerald-700/60 dark:text-emerald-400/60">All notifications are being sent instantly to new guests and organizers.</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3 w-full md:w-auto">
+                        <button wire:click="sendInvitations" class="flex-1 md:flex-none px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-indigo-600/20">
+                            Re-send Pending Invites
+                        </button>
+                        <button wire:click="archiveEvent" class="flex-1 md:flex-none px-6 py-3 bg-white dark:bg-white/5 border border-emerald-200 dark:border-white/10 text-emerald-700 dark:text-emerald-400 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all">
+                            Archive Event
+                        </button>
+                    </div>
+                </div>
+            @elseif($event->status === 'archived')
+                <div class="mb-8 p-6 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-[2rem] flex items-center gap-4 animate-in fade-in slide-in-from-top-4 duration-500">
+                    <div class="w-12 h-12 rounded-2xl bg-gray-200 dark:bg-white/5 flex items-center justify-center text-gray-500">
+                        <span class="material-symbols-outlined">inventory_2</span>
+                    </div>
+                    <div>
+                        <h4 class="text-sm font-black uppercase tracking-tight text-gray-800 dark:text-gray-200">Event Archived</h4>
+                        <p class="text-xs text-gray-500">This event has concluded and is now in read-only mode for most features.</p>
+                    </div>
+                    <button wire:click="publishEvent(false)" class="ml-auto px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-indigo-600/20">
+                        Restore to Live
+                    </button>
+                </div>
+            @endif
+        @endif
 
         <!-- Tab Content -->
         <div class="mt-6">

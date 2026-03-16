@@ -62,20 +62,22 @@ class InviteForm extends Component
             ]
         );
 
-        if ($invitee) {
-            Notification::create([
-                'user_id' => $invitee->id,
-                'type' => 'invite',
-                'title' => 'Event Invitation',
-                'message' => Auth::user()->name . " has invited you to: " . $this->event->title,
-                'related_id' => $invite->id,
-            ]);
+        if ($this->event->status === Event::STATUS_PUBLISHED) {
+            if ($invitee) {
+                Notification::create([
+                    'user_id' => $invitee->id,
+                    'type' => 'invite',
+                    'title' => 'Event Invitation',
+                    'message' => Auth::user()->name . " has invited you to: " . $this->event->title,
+                    'related_id' => $invite->id,
+                ]);
+            }
+
+            \Illuminate\Support\Facades\Mail::to($this->email)->send(new \App\Mail\EventInvitation($this->event, Auth::user(), $this->message));
+            session()->flash('invite_message', 'Invitation sent to ' . $this->email);
+        } else {
+            session()->flash('invite_message', 'Invitation saved. It will be sent once the event is published.');
         }
-
-        \Illuminate\Support\Facades\Mail::to($this->email)->send(new \App\Mail\EventInvitation($this->event, Auth::user(), $this->message));
-
-        $this->reset(['email', 'message']);
-        session()->flash('invite_message', 'Invitation sent to ' . $this->email);
         $this->dispatch('invite-sent');
     }
 

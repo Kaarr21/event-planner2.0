@@ -55,13 +55,15 @@ class ManageOrganizers extends Component
             'permissions' => $this->selectedPermissions,
         ]);
 
-        Notification::create([
-            'user_id' => $user->id,
-            'type' => 'info',
-            'title' => 'Organizer Role Assigned',
-            'message' => "You have been assigned as an organizer for: " . $this->event->title,
-            'related_id' => $this->event->id,
-        ]);
+        if ($this->event->status === Event::STATUS_PUBLISHED) {
+            Notification::create([
+                'user_id' => $user->id,
+                'type' => 'info',
+                'title' => 'Organizer Role Assigned',
+                'message' => "You have been assigned as an organizer for: " . $this->event->title,
+                'related_id' => $this->event->id,
+            ]);
+        }
 
         $this->reset('email');
         session()->flash('organizer_message', 'Organizer added successfully.');

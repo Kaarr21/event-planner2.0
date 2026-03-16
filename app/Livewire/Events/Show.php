@@ -462,6 +462,85 @@ class Show extends Component
         }, 'tasks-checklist-' . \Illuminate\Support\Str::slug($this->event->title) . '.pdf');
     }
 
+    public function publishEvent($sendNow = false)
+    {
+        if (!$this->hasPermission('owner')) return abort(403);
+
+        $this->event->update(['status' => Event::STATUS_PUBLISHED]);
+        
+        if ($sendNow) {
+            $this->sendInvitations();
+        }
+
+        session()->flash('message', 'Event published successfully!');
+        $this->dispatch('event-updated');
+    }
+
+    public function archiveEvent()
+    {
+        if (!$this->hasPermission('owner')) return abort(403);
+
+        $this->event->update(['status' => Event::STATUS_ARCHIVED]);
+        session()->flash('message', 'Event archived.');
+        $this->dispatch('event-updated');
+    }
+
+    public function sendInvitations()
+    {
+        if (!$this->hasPermission('manage_invites')) return abort(403);
+
+        $invites = $this->event->invites()->where('status', 'pending')->get();
+        $notifiedCount = 0;
+
+        foreach ($invites as $invite) {
+            // Check if notification already exists to avoid duplicates
+            $exists = \App\Models\Notification::where('user_id', $invite->invitee_id)
+                ->where('related_id', $invite->id)
+                ->where('type', 'invite')
+                ->exists();
+
+            if (!$exists) {
+                if ($invite->invitee_id) {
+                    \App\Models\Notification::create([
+                        'user_id' => $invite->invitee_id,
+                        'type' => 'invite',
+                        'title' => 'Event Invitation',
+                        'message' => Auth::user()->name . " has invited you to: " . $this->event->title,
+                        'related_id' => $invite->id,
+                    ]);
+                }
+
+                \Illuminate\Support\Facades\Mail::to($invite->invitee_email)
+                    ->send(new \App\Mail\EventInvitation($this->event, Auth::user(), $invite->message));
+                
+                $notifiedCount++;
+            }
+        }
+
+        // Also notify organizers who haven't been notified
+        $organizers = $this->event->organizers()->get();
+        foreach ($organizers as $organizer) {
+            $exists = \App\Models\Notification::where('user_id', $organizer->id)
+                ->where('related_id', $this->event->id)
+                ->where('type', 'info')
+                ->where('title', 'Organizer Role Assigned')
+                ->exists();
+
+            if (!$exists) {
+                \App\Models\Notification::create([
+                    'user_id' => $organizer->id,
+                    'type' => 'info',
+                    'title' => 'Organizer Role Assigned',
+                    'message' => "You have been assigned as an organizer for: " . $this->event->title,
+                    'related_id' => $this->event->id,
+                ]);
+                $notifiedCount++;
+            }
+        }
+
+        session()->flash('message', "Sent $notifiedCount invitations/notifications.");
+    }
+
     public function render()
     {
         return view('livewire.events.show', [

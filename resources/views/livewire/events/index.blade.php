@@ -21,7 +21,17 @@
                         <div class="absolute inset-0 bg-cover bg-center group-hover:scale-105 transition-transform duration-500" 
                              style="background-image: url('https://images.unsplash.com/photo-1511795409834-ef04bbd61622?q=80&w=1000&auto=format&fit=crop')"></div>
                         <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-                        <div class="absolute top-4 right-4 bg-[#257bf4]/90 text-white text-[10px] font-bold px-2.5 py-1 rounded-lg backdrop-blur-md uppercase tracking-wider">
+                        
+                        <!-- Status Badge -->
+                        <div class="absolute top-4 left-4 border backdrop-blur-md text-[10px] font-bold px-2.5 py-1 rounded-lg uppercase tracking-wider
+                            {{ $event->status === 'published' ? 'bg-emerald-500/80 text-white border-emerald-400/30' : '' }}
+                            {{ $event->status === 'draft' ? 'bg-amber-500/80 text-white border-amber-400/30' : '' }}
+                            {{ $event->status === 'archived' ? 'bg-rose-500/80 text-white border-rose-400/30' : '' }}
+                         shadow-lg">
+                            {{ $event->status }}
+                        </div>
+
+                        <div class="absolute top-4 right-4 bg-white/20 text-white text-[10px] font-bold px-2.5 py-1 rounded-lg backdrop-blur-md uppercase tracking-wider border border-white/10">
                             {{ $event->category ?? 'EVENT' }}
                         </div>
                     </div>

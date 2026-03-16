@@ -6,6 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class Event extends Model
 {
+    const STATUS_DRAFT = 'draft';
+    const STATUS_PUBLISHED = 'published';
+    const STATUS_ARCHIVED = 'archived';
+
     protected $fillable = [
         'title',
         'description',
@@ -16,11 +20,13 @@ class Event extends Model
         'latitude',
         'longitude',
         'google_place_id',
+        'status',
     ];
 
     protected $casts = [
         'settings' => 'array',
         'date' => 'datetime',
+        'status' => 'string',
     ];
 
     /**
