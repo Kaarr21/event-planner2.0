@@ -13,6 +13,9 @@ class Event extends Model
         'location',
         'user_id',
         'settings',
+        'latitude',
+        'longitude',
+        'google_place_id',
     ];
 
     protected $casts = [

@@ -35,6 +35,20 @@ class Show extends Component
     // AI Suggestions
     public array $aiSuggestions = [];
 
+    // Tab Management
+    public $activeTab = 'overview';
+
+    // Location Tracking
+    public $latitude;
+    public $longitude;
+    public $googlePlaceId;
+    public $locationSearch;
+
+    public function setActiveTab($tab)
+    {
+        $this->activeTab = $tab;
+    }
+
     protected $rules = [
         'newTaskTitle' => 'required|string|max:255',
         'newTaskDueDate' => 'nullable|date',
@@ -44,12 +58,67 @@ class Show extends Component
         'editTaskDescription' => 'nullable|string',
         'editTaskAssignedTo' => 'nullable|exists:users,id',
         'completionComment' => 'nullable|string',
+        'locationSearch' => 'nullable|string|max:255',
     ];
 
     public function mount(Event $event)
     {
         $this->event = $event;
+        $this->latitude = $event->latitude;
+        $this->longitude = $event->longitude;
+        $this->googlePlaceId = $event->google_place_id;
+        $this->locationSearch = $event->location;
         $this->authorizeUser();
+    }
+
+    public function syncLocation($lat, $lng, $placeId, $address)
+    {
+        if (!$this->hasPermission('edit_event')) return;
+
+        $this->latitude = $lat;
+        $this->longitude = $lng;
+        $this->googlePlaceId = $placeId;
+        $this->locationSearch = $address;
+
+        $this->event->update([
+            'latitude' => $lat,
+            'longitude' => $lng,
+            'google_place_id' => $placeId,
+            'location' => $address,
+        ]);
+
+        $this->event->refresh();
+        session()->flash('location_message', 'Location synced with Google Maps!');
+    }
+
+    public function bulkShareLocation()
+    {
+        if (!$this->hasPermission('manage_invites')) return;
+
+        if (!$this->event->latitude || !$this->event->longitude) {
+            session()->flash('location_message', 'Please sync a location first.');
+            return;
+        }
+
+        $attendingGuests = $this->event->rsvps()
+            ->where('status', 'attending')
+            ->with('user')
+            ->get()
+            ->pluck('user');
+
+        foreach ($attendingGuests as $guest) {
+            $guest->notify(new \App\Notifications\LocationSharedNotification($this->event));
+            
+            \App\Models\Notification::create([
+                'user_id' => $guest->id,
+                'type' => 'location_shared',
+                'title' => 'Location Pin Shared',
+                'message' => Auth::user()->name . " shared the exact coordinates for " . $this->event->title,
+                'related_id' => $this->event->id,
+            ]);
+        }
+
+        session()->flash('location_message', 'Location pin shared with ' . $attendingGuests->count() . ' attending guests!');
     }
 
     protected function authorizeUser()
