@@ -1,3 +1,50 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@media print {
+    .no-print,
+    header,
+    nav,
+    footer,
+    aside,
+    button,
+    .tabs-nav,
+    .form-container,
+    .action-buttons {
+        display: none !important;
+    }
+    
+    .print-only {
+        display: block !important;
+    }
+
+    body {
+        background: white !important;
+        color: black !important;
+        padding: 0;
+        margin: 0;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    .print-container {
+        display: block !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+        border: none !important;
+    }
+
+    /* Force specific sections to stay visible if they have the print-container class */
+    .bg-white, .dark\:bg-gray-800\/50 {
+        background-color: transparent !important;
+        border: none !important;
+        padding: 0 !important;
+    }
+}
+
+.print-only {
+    display: none;
+}

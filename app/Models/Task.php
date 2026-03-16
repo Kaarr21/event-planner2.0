@@ -18,6 +18,15 @@ class Task extends Model
     ];
 
     /**
+     * The attributes that should be cast.
+     *
+     * @var array<string, string>
+     */
+    protected $casts = [
+        'due_date' => 'date',
+    ];
+
+    /**
      * Get the event that owns the task.
      */
     public function event()

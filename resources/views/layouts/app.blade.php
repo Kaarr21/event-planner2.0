@@ -40,11 +40,13 @@
     </head>
     <body class="font-sans antialiased bg-gray-50 dark:bg-[#0f172a] text-gray-900 dark:text-gray-100 transition-colors duration-300">
         <div class="min-h-screen">
-            <livewire:layout.navigation />
+            <div class="no-print">
+                <livewire:layout.navigation />
+            </div>
 
             <!-- Page Heading -->
             @if (isset($header))
-                <header class="bg-white dark:bg-[#1e293b]/50 dark:backdrop-blur-xl shadow dark:border-b dark:border-white/5 transition-colors duration-300">
+                <header class="bg-white dark:bg-[#1e293b]/50 dark:backdrop-blur-xl shadow dark:border-b dark:border-white/5 transition-colors duration-300 no-print">
                     <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
                         {{ $header }}
                     </div>

@@ -106,7 +106,8 @@
                                 </p>
                                 
                                 @if($userRole !== 'invited')
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-12 pt-10 border-t border-gray-100 dark:border-white/5">
+                                    <!-- Action Cards -->
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-12 pt-10 border-t border-gray-100 dark:border-white/5 no-print">
                                         <div class="flex items-center gap-5 group">
                                             <div class="w-14 h-14 rounded-2xl bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center text-indigo-600 group-hover:scale-110 transition-transform">
                                                 <span class="material-symbols-outlined text-2xl">calendar_month</span>
@@ -135,7 +136,7 @@
                     <div class="space-y-8">
                         <!-- RSVP Status Card -->
                         @if($userRole !== 'invited')
-                            <div class="bg-white dark:bg-gray-800/50 dark:backdrop-blur-xl overflow-hidden shadow-sm sm:rounded-[2rem] border border-gray-100 dark:border-white/5">
+                            <div class="bg-white dark:bg-gray-800/50 dark:backdrop-blur-xl overflow-hidden shadow-sm sm:rounded-[2rem] border border-gray-100 dark:border-white/5 no-print">
                                 <div class="p-8">
                                     <h3 class="text-lg font-black text-gray-900 dark:text-white uppercase tracking-tighter mb-6">Your Attendance</h3>
                                     
@@ -169,7 +170,7 @@
                 <div class="col-span-full mt-12 animate-in fade-in slide-in-from-bottom-6 duration-700 delay-200">
                     <div class="bg-white dark:bg-[#1e293b]/50 dark:backdrop-blur-xl overflow-hidden shadow-sm sm:rounded-[2.5rem] border border-gray-100 dark:border-white/5">
                         <div class="p-8 md:p-12">
-                            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10">
+                            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10 no-print">
                                 <div>
                                     <div class="flex items-center gap-3 mb-2">
                                         <div class="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-500">
@@ -203,7 +204,7 @@
                             </div>
 
                             @if($this->hasPermission('edit_event'))
-                                <div class="mb-8" wire:ignore>
+                                <div class="mb-8 no-print" wire:ignore>
                                     <div class="relative group">
                                         <span class="absolute left-5 top-1/2 -translate-y-1/2 material-symbols-outlined text-gray-400 group-focus-within:text-indigo-500 transition-colors">search</span>
                                         <input id="pac-input" type="text" placeholder="Search for a location to sync with Google Maps..." class="w-full bg-gray-50 dark:bg-white/5 border-0 ring-1 ring-gray-100 dark:ring-white/10 text-gray-900 dark:text-white text-sm rounded-2xl focus:ring-2 focus:ring-indigo-500 pl-14 pr-6 py-5 transition-all" value="{{ $locationSearch }}">
@@ -224,7 +225,7 @@
                             </div>
                             
                             @if(session()->has('location_message'))
-                                <div class="mt-6 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl">
+                                <div class="mt-6 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl no-print">
                                     <p class="text-[10px] font-bold text-center text-emerald-600 uppercase tracking-widest animate-pulse">{{ session('location_message') }}</p>
                                 </div>
                             @endif
@@ -243,17 +244,48 @@
                                     <h3 class="text-2xl font-black text-gray-900 dark:text-white uppercase tracking-tighter">Tasks Checklist</h3>
                                     <p class="text-sm text-gray-500 mt-1">Manage your event to-dos and track progress.</p>
                                 </div>
-                                @if($this->hasPermission('manage_tasks'))
-                                <button type="button" wire:click="suggestAITasks" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black uppercase tracking-widest rounded-xl shadow-xl shadow-indigo-500/20 transition-all hover:scale-105 active:scale-95 flex items-center">
-                                    <span class="material-symbols-outlined text-sm mr-2">magic_button</span>
-                                    Suggest with AI
-                                </button>
-                                @endif
+                                <div class="flex items-center gap-2 no-print">
+                                    @if($this->hasPermission('manage_tasks'))
+                                        <!-- Export Dropdown -->
+                                        <div x-data="{ open: false }" class="relative">
+                                            <button @click="open = !open" class="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 rounded-xl transition-all text-[10px] font-black uppercase tracking-widest text-gray-600 dark:text-gray-400">
+                                                <span class="material-symbols-outlined text-sm">download</span>
+                                                Export
+                                                <span class="material-symbols-outlined text-sm transition-transform" :class="open ? 'rotate-180' : ''">expand_more</span>
+                                            </button>
+                                            
+                                            <div x-show="open" @click.away="open = false" class="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-100 dark:border-white/5 z-50 overflow-hidden" x-transition>
+                                                <button wire:click="exportTasksToExcel" class="w-full text-left px-5 py-3 text-[10px] font-black uppercase tracking-widest text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/5 flex items-center gap-3">
+                                                    <span class="material-symbols-outlined text-sm text-emerald-500">table_chart</span>
+                                                    Excel (.xlsx)
+                                                </button>
+                                                <button wire:click="exportTasksToCSV" class="w-full text-left px-5 py-3 text-[10px] font-black uppercase tracking-widest text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/5 flex items-center gap-3">
+                                                    <span class="material-symbols-outlined text-sm text-indigo-500">csv</span>
+                                                    CSV (.csv)
+                                                </button>
+                                                <button wire:click="exportTasksToPDF" class="w-full text-left px-5 py-3 text-[10px] font-black uppercase tracking-widest text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/5 flex items-center gap-3">
+                                                    <span class="material-symbols-outlined text-sm text-rose-500">picture_as_pdf</span>
+                                                    PDF (.pdf)
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <button onclick="window.print()" class="flex items-center gap-2 px-4 py-2 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 rounded-xl transition-all text-[10px] font-black uppercase tracking-widest">
+                                            <span class="material-symbols-outlined text-sm">print</span>
+                                            Print
+                                        </button>
+
+                                        <button type="button" wire:click="suggestAITasks" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-xl shadow-indigo-500/20 transition-all hover:scale-105 active:scale-95 flex items-center">
+                                            <span class="material-symbols-outlined text-sm mr-2">magic_button</span>
+                                            AI Suggest
+                                        </button>
+                                    @endif
+                                </div>
                             </div>
 
                             @if($this->hasPermission('manage_tasks'))
                             <!-- Add Task Form -->
-                            <form wire:submit.prevent="addTask" class="mb-12 bg-gray-50 dark:bg-white/5 p-6 rounded-[2rem] border border-gray-100 dark:border-white/5">
+                            <form wire:submit.prevent="addTask" class="mb-12 bg-gray-50 dark:bg-white/5 p-6 rounded-[2rem] border border-gray-100 dark:border-white/5 no-print">
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                                     <div class="space-y-1">
                                         <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Task Description</label>
@@ -283,7 +315,7 @@
 
                              <!-- AI Suggestions Section -->
                              @if (!empty($aiSuggestions))
-                                <div class="mb-12 p-8 bg-indigo-600 text-white rounded-[2.5rem] shadow-2xl shadow-indigo-500/40 relative overflow-hidden">
+                                <div class="mb-12 p-8 bg-indigo-600 text-white rounded-[2.5rem] shadow-2xl shadow-indigo-500/40 relative overflow-hidden no-print">
                                     <div class="absolute top-0 right-0 p-8 opacity-10">
                                         <span class="material-symbols-outlined text-8xl">auto_awesome</span>
                                     </div>
@@ -318,7 +350,7 @@
                             @endif
 
                             <!-- Tasks List -->
-                            <div class="space-y-4">
+                            <div class="space-y-4 print-container">
                                 @forelse ($tasks as $task)
                                     <div class="group p-6 bg-gray-50 dark:bg-white/5 rounded-[2rem] border border-transparent hover:border-gray-200 dark:hover:border-white/10 transition-all">
                                         @if($editingTaskId === $task->id)
@@ -362,7 +394,7 @@
                                                             @if ($task->due_date)
                                                                 <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
                                                                     <span class="material-symbols-outlined text-sm">event</span>
-                                                                    <span class="text-[10px] font-black uppercase tracking-wider">{{ \Carbon\Carbon::parse($task->due_date)->format('M d') }}</span>
+                                                                    <span class="text-[10px] font-black uppercase tracking-wider">{{ $task->due_date->format('M d') }}</span>
                                                                 </div>
                                                             @endif
 
@@ -402,7 +434,7 @@
                                                         @endif
                                                     </div>
                                                 </div>
-                                                <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity no-print">
                                                     @if($this->hasPermission('manage_tasks'))
                                                         <button wire:click="startEditTask({{ $task->id }})" class="p-2 text-gray-400 hover:text-indigo-500 transition-colors">
                                                             <span class="material-symbols-outlined text-lg">edit</span>
@@ -434,8 +466,48 @@
                         <div class="lg:col-span-2 space-y-8">
                             <!-- Guest List Card -->
                             <div class="bg-white dark:bg-gray-800/50 dark:backdrop-blur-xl overflow-hidden shadow-sm sm:rounded-[2.5rem] border border-gray-100 dark:border-white/5 p-8 md:p-10">
-                                <h3 class="text-2xl font-black text-gray-900 dark:text-white uppercase tracking-tighter mb-8">Guest List</h3>
-                                <div class="space-y-6">
+                                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 no-print">
+                                    <h3 class="text-2xl font-black text-gray-900 dark:text-white uppercase tracking-tighter">Guest List</h3>
+                                    
+                                    <div class="flex items-center gap-2">
+                                        @if($this->hasPermission('manage_invites'))
+                                            <!-- Export Dropdown -->
+                                            <div x-data="{ open: false }" class="relative">
+                                                <button @click="open = !open" class="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 rounded-xl transition-all text-[10px] font-black uppercase tracking-widest text-gray-600 dark:text-gray-400">
+                                                    <span class="material-symbols-outlined text-sm">download</span>
+                                                    Export
+                                                    <span class="material-symbols-outlined text-sm transition-transform" :class="open ? 'rotate-180' : ''">expand_more</span>
+                                                </button>
+                                                
+                                                <div x-show="open" @click.away="open = false" class="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-100 dark:border-white/5 z-50 overflow-hidden" x-transition>
+                                                    <button wire:click="exportToExcel" class="w-full text-left px-5 py-3 text-[10px] font-black uppercase tracking-widest text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/5 flex items-center gap-3">
+                                                        <span class="material-symbols-outlined text-sm text-emerald-500">table_chart</span>
+                                                        Excel (.xlsx)
+                                                    </button>
+                                                    <button wire:click="exportToCSV" class="w-full text-left px-5 py-3 text-[10px] font-black uppercase tracking-widest text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/5 flex items-center gap-3">
+                                                        <span class="material-symbols-outlined text-sm text-indigo-500">csv</span>
+                                                        CSV (.csv)
+                                                    </button>
+                                                    <button wire:click="exportToPDF" class="w-full text-left px-5 py-3 text-[10px] font-black uppercase tracking-widest text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/5 flex items-center gap-3">
+                                                        <span class="material-symbols-outlined text-sm text-rose-500">picture_as_pdf</span>
+                                                        PDF (.pdf)
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            <button onclick="window.print()" class="flex items-center gap-2 px-4 py-2 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 rounded-xl transition-all text-[10px] font-black uppercase tracking-widest">
+                                                <span class="material-symbols-outlined text-sm">print</span>
+                                                Print
+                                            </button>
+                                        @endif
+                                    </div>
+                                </div>
+
+                                <div class="print-only mb-8">
+                                    <h1 class="text-3xl font-black uppercase tracking-tighter">{{ $event->title }}</h1>
+                                    <p class="text-gray-500">Approved Guest List • Generated {{ now()->format('M d, Y') }}</p>
+                                </div>
+                                <div class="space-y-6 print-container">
                                     @forelse ($rsvps as $rsvp)
                                         <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-white/5 rounded-2xl">
                                             <div class="flex items-center gap-4">
@@ -462,7 +534,7 @@
                         <div>
                             <!-- Invite Form (Moved to Tab) -->
                             @if($this->hasPermission('manage_invites'))
-                                <div class="bg-indigo-600 rounded-[2.5rem] shadow-2xl shadow-indigo-500/30 p-8 text-white sticky top-8">
+                                <div class="bg-indigo-600 rounded-[2.5rem] shadow-2xl shadow-indigo-500/30 p-8 text-white sticky top-8 no-print">
                                     <h4 class="text-xl font-black uppercase tracking-tighter mb-6">Bring your team</h4>
                                     <livewire:events.invite-form :event="$event" />
                                 </div>

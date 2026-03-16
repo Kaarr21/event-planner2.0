@@ -8,6 +8,10 @@ use App\Models\Task;
 use App\Models\RSVP;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Maatwebsite\Excel\Facades\Excel;
+use Barryvdh\DomPDF\Facade\Pdf;
+use App\Exports\GuestListExport;
+use App\Exports\TasksExport;
 
 class Show extends Component
 {
@@ -389,6 +393,73 @@ class Show extends Component
         $allIds = array_unique(array_merge($organizerIds, $guestIds));
         
         return User::whereIn('id', $allIds)->get();
+    }
+
+    public function exportToCSV()
+    {
+        if (!$this->hasPermission('manage_invites')) return abort(403);
+        
+        return Excel::download(new GuestListExport($this->event->id), 'guest-list-' . \Illuminate\Support\Str::slug($this->event->title) . '.csv', \Maatwebsite\Excel\Excel::CSV);
+    }
+
+    public function exportToExcel()
+    {
+        if (!$this->hasPermission('manage_invites')) return abort(403);
+
+        return Excel::download(new GuestListExport($this->event->id), 'guest-list-' . \Illuminate\Support\Str::slug($this->event->title) . '.xlsx');
+    }
+
+    public function exportToPDF()
+    {
+        if (!$this->hasPermission('manage_invites')) return abort(403);
+
+        $guests = $this->event->rsvps()
+            ->whereIn('status', ['attending', 'maybe'])
+            ->with('user')
+            ->get();
+
+        $pdf = Pdf::loadView('exports.guest-list-pdf', [
+            'event' => $this->event,
+            'guests' => $guests
+        ]);
+
+        return response()->streamDownload(function() use ($pdf) {
+            echo $pdf->stream();
+        }, 'guest-list-' . \Illuminate\Support\Str::slug($this->event->title) . '.pdf');
+    }
+
+    public function exportTasksToCSV()
+    {
+        if (!$this->hasPermission('manage_tasks')) return abort(403);
+        
+        return Excel::download(new TasksExport($this->event->id), 'tasks-' . \Illuminate\Support\Str::slug($this->event->title) . '.csv', \Maatwebsite\Excel\Excel::CSV);
+    }
+
+    public function exportTasksToExcel()
+    {
+        if (!$this->hasPermission('manage_tasks')) return abort(403);
+
+        return Excel::download(new TasksExport($this->event->id), 'tasks-' . \Illuminate\Support\Str::slug($this->event->title) . '.xlsx');
+    }
+
+    public function exportTasksToPDF()
+    {
+        if (!$this->hasPermission('manage_tasks')) return abort(403);
+
+        $tasks = $this->event->tasks()
+            ->with('assignee')
+            ->orderBy('completed')
+            ->orderBy('due_date')
+            ->get();
+
+        $pdf = Pdf::loadView('exports.tasks-pdf', [
+            'event' => $this->event,
+            'tasks' => $tasks
+        ]);
+
+        return response()->streamDownload(function() use ($pdf) {
+            echo $pdf->stream();
+        }, 'tasks-checklist-' . \Illuminate\Support\Str::slug($this->event->title) . '.pdf');
     }
 
     public function render()
