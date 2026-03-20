@@ -58,6 +58,11 @@ class Show extends Component
     public $editDraftEmail;
     public $editDraftPhone;
 
+    // Bulk Notification properties
+    public $selectedInviteIds = [];
+    public $showBulkNotificationModal = false;
+    public $bulkNotificationMessage = '';
+
     // Tab Management
     public $activeTab = 'overview';
 
@@ -86,6 +91,7 @@ class Show extends Component
         'editDraftName' => 'required|string|max:255',
         'editDraftEmail' => 'required|email|max:255',
         'editDraftPhone' => 'nullable|string|max:20',
+        'bulkNotificationMessage' => 'required|string|max:5000',
     ];
 
     public function mount(Event $event)
@@ -728,6 +734,62 @@ class Show extends Component
             'status' => 'pending',
             'invited_at' => now()
         ]);
+    }
+
+    public function toggleInviteSelection($inviteId)
+    {
+        if (in_array($inviteId, $this->selectedInviteIds)) {
+            $this->selectedInviteIds = array_diff($this->selectedInviteIds, [$inviteId]);
+        } else {
+            $this->selectedInviteIds[] = (int) $inviteId;
+        }
+        $this->selectedInviteIds = array_values($this->selectedInviteIds);
+    }
+
+    public function selectAllInvites()
+    {
+        $allIds = $this->event->invites()->pluck('id')->toArray();
+        if (count($this->selectedInviteIds) === count($allIds)) {
+            $this->selectedInviteIds = [];
+        } else {
+            $this->selectedInviteIds = $allIds;
+        }
+    }
+
+    public function openBulkNotificationModal()
+    {
+        if (empty($this->selectedInviteIds)) {
+            session()->flash('error', 'Please select at least one guest to notify.');
+            return;
+        }
+        $this->showBulkNotificationModal = true;
+    }
+
+    public function closeBulkNotificationModal()
+    {
+        $this->showBulkNotificationModal = false;
+        $this->bulkNotificationMessage = '';
+    }
+
+    public function sendBulkNotification()
+    {
+        if (!$this->hasPermission('edit_event')) return;
+        if (empty($this->selectedInviteIds)) return;
+
+        $this->validate(['bulkNotificationMessage' => 'required|string|max:5000']);
+
+        $invites = \App\Models\Invite::whereIn('id', $this->selectedInviteIds)->get();
+
+        foreach ($invites as $invite) {
+            \Illuminate\Support\Facades\Mail::to($invite->invitee_email)
+                ->send(new \App\Mail\BulkEventNotificationMail($this->event, $this->bulkNotificationMessage));
+        }
+
+        $count = $invites->count();
+        $this->reset(['selectedInviteIds', 'showBulkNotificationModal', 'bulkNotificationMessage']);
+        
+        session()->flash('message', 'Notifications sent successfully to ' . $count . ' guests!');
+        $this->dispatch('event-updated');
     }
 
     public function confirmCancellation()

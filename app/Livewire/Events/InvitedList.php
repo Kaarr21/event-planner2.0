@@ -8,12 +8,16 @@ use Livewire\Component;
 class InvitedList extends Component
 {
     public Event $event;
+    public $selectedInviteIds = [];
+    public bool $canEditEvent = false;
 
     protected $listeners = ['invite-sent' => '$refresh', 'notification-read' => '$refresh'];
 
-    public function mount(Event $event)
+    public function mount(Event $event, $selectedInviteIds = [], $canEditEvent = false)
     {
         $this->event = $event;
+        $this->selectedInviteIds = $selectedInviteIds;
+        $this->canEditEvent = $canEditEvent;
     }
 
     public function render()

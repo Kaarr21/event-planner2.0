@@ -667,7 +667,17 @@
                                                 <span class="material-symbols-outlined text-sm">mail</span>
                                                 Invitations & Drafts
                                             </h4>
-                                            <livewire:events.invited-list :event="$event" />
+                                            <livewire:events.invited-list :event="$event" :selectedInviteIds="$selectedInviteIds" :canEditEvent="$this->hasPermission('edit_event')" />
+
+                                            @if(count($selectedInviteIds) > 0 && $this->hasPermission('edit_event'))
+                                                <div class="fixed bottom-8 right-8 z-50">
+                                                    <button wire:click="openBulkNotificationModal" class="flex items-center gap-3 px-6 py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full shadow-2xl transition-all transform hover:scale-105 active:scale-95 group border border-indigo-500/30 backdrop-blur-sm">
+                                                        <span class="material-symbols-outlined group-hover:rotate-12 transition-transform">send</span>
+                                                        <span class="font-bold tracking-wide">Notify {{ count($selectedInviteIds) }} Selected</span>
+                                                    </button>
+                                                </div>
+                                            @endif
+
                                         </div>
                                     @endif
                                 </div>
@@ -703,7 +713,8 @@
                                 <div class="flex items-center justify-between mb-8">
                                     <h4 class="text-xl font-black uppercase tracking-tighter text-gray-900 dark:text-white">Invited Members</h4>
                                 </div>
-                                <livewire:events.invited-list :event="$event" />
+                                <livewire:events.invited-list :event="$event" :selectedInviteIds="$selectedInviteIds" :canEditEvent="$this->hasPermission('edit_event')" />
+
                             </div>
                         @endif
 
@@ -1047,6 +1058,58 @@
             </div>
         @endif
 
+    <!-- Bulk Notification Modal -->
+    @if($showBulkNotificationModal)
+        <div class="fixed inset-0 z-[60] overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+            <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                <div class="fixed inset-0 bg-gray-900/75 backdrop-blur-sm transition-opacity" aria-hidden="true" wire:click="closeBulkNotificationModal"></div>
+
+                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+                <div class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-gray-200 dark:border-gray-700">
+                    <div class="bg-indigo-600 px-6 py-4 flex justify-between items-center text-white">
+                        <div class="flex items-center gap-3">
+                            <span class="material-symbols-outlined">campaign</span>
+                            <h3 class="text-lg font-bold">Send Bulk Notification</h3>
+                        </div>
+                        <button wire:click="closeBulkNotificationModal" class="text-white/80 hover:text-white transition-colors">
+                            <span class="material-symbols-outlined text-xl font-bold">close</span>
+                        </button>
+                    </div>
+
+                    <div class="p-6">
+                        <div class="mb-6 p-4 bg-indigo-50 dark:bg-indigo-900/30 rounded-xl border border-indigo-100 dark:border-indigo-800/50 flex items-start gap-3">
+                            <span class="material-symbols-outlined text-indigo-600 mt-0.5">group</span>
+                            <div>
+                                <p class="text-sm font-bold text-indigo-900 dark:text-indigo-200">Notifying {{ count($selectedInviteIds) }} guests</p>
+                                <p class="text-xs text-indigo-700 dark:text-indigo-300/80 mt-1">These guests will receive an email with your custom message and a link to the event.</p>
+                            </div>
+                        </div>
+
+                        <div class="space-y-4">
+                            <div>
+                                <label for="bulk_message" class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Compose Message</label>
+                                <textarea wire:model="bulkNotificationMessage" id="bulk_message" rows="6" 
+                                    class="w-full bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all placeholder:text-gray-400"
+                                    placeholder="Write your update or reminder here..."></textarea>
+                                @error('bulkNotificationMessage') <span class="text-xs text-rose-500 font-bold mt-1">{{ $message }}</span> @enderror
+                            </div>
+                        </div>
+
+                        <div class="mt-8 flex gap-3">
+                            <button wire:click="closeBulkNotificationModal" class="flex-1 px-6 py-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-xl font-bold transition-all">
+                                Cancel
+                            </button>
+                            <button wire:click="sendBulkNotification" class="flex-1 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-lg shadow-indigo-500/30 transition-all flex items-center justify-center gap-2 group">
+                                <span class="material-symbols-outlined text-sm group-hover:translate-x-1 transition-transform">send</span>
+                                Send Message
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
     </div>
 </div>
 

@@ -25,7 +25,7 @@ class WelcomeEmailTest extends TestCase
 
         $component->call('register');
 
-        Mail::assertQueued(WelcomeMail::class, function (WelcomeMail $mail) {
+        Mail::assertSent(WelcomeMail::class, function (WelcomeMail $mail) {
             return $mail->hasTo('test@example.com') &&
                    $mail->user->name === 'Test User';
         });
