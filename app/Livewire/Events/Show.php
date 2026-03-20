@@ -39,6 +39,10 @@ class Show extends Component
     // AI Suggestions
     public array $aiSuggestions = [];
 
+    // Cancellation properties
+    public $isConfirmingCancellation = false;
+    public $cancellationReason = '';
+
     // Tab Management
     public $activeTab = 'overview';
 
@@ -63,6 +67,7 @@ class Show extends Component
         'editTaskAssignedTo' => 'nullable|exists:users,id',
         'completionComment' => 'nullable|string',
         'locationSearch' => 'nullable|string|max:255',
+        'cancellationReason' => 'nullable|string|max:1000',
     ];
 
     public function mount(Event $event)
@@ -168,6 +173,12 @@ class Show extends Component
 
     public function hasPermission($permission)
     {
+        // If event is cancelled, only allow 'view' and 'owner' (for restoring maybe, but user said "no further actions can be performed").
+        // I'll block everything except 'view' if cancelled.
+        if ($this->event->status === Event::STATUS_CANCELLED && $permission !== 'view') {
+            return false;
+        }
+
         $perms = $this->userPermissions ?: [];
         if (!is_array($perms)) {
             $perms = [];
@@ -483,6 +494,101 @@ class Show extends Component
         $this->event->update(['status' => Event::STATUS_ARCHIVED]);
         session()->flash('message', 'Event archived.');
         $this->dispatch('event-updated');
+    }
+
+    public function confirmCancellation()
+    {
+        if (!$this->hasPermission('edit_event')) return abort(403);
+        $this->isConfirmingCancellation = true;
+    }
+
+    public function cancelEvent()
+    {
+        if (!$this->hasPermission('edit_event')) return abort(403);
+
+        $this->validate(['cancellationReason' => 'nullable|string|max:1000']);
+
+        $this->event->update([
+            'status' => Event::STATUS_CANCELLED,
+            'cancellation_reason' => $this->cancellationReason,
+        ]);
+
+        // If the event was published, notify all invited users and organizers
+        if ($this->event->status === Event::STATUS_CANCELLED) {
+            $this->notifyParticipantsOfCancellation();
+        }
+
+        $this->isConfirmingCancellation = false;
+        session()->flash('message', 'Event cancelled successfully.');
+    }
+
+    protected function notifyParticipantsOfCancellation()
+    {
+        $cancelledBy = Auth::user();
+        
+        // 1. Get all invited users (those with an entry in the 'invites' table)
+        $invites = $this->event->invites()->get();
+        // 2. Get all RSVPs (those who responded)
+        $rsvps = $this->event->rsvps()->with('user')->get();
+        // 3. Get all organizers
+        $organizers = $this->event->organizers()->get();
+
+        // Track who we notified to avoid duplicates
+        $notifiedUserIds = [];
+        $notifiedEmails = [];
+
+        // Notify Invitees (Database + Email if possible)
+        foreach ($invites as $invite) {
+            if ($invite->invitee_id && !in_array($invite->invitee_id, $notifiedUserIds)) {
+                $this->sendCancellationInAppNotification($invite->invitee_id, $this->event, $cancelledBy, $this->cancellationReason);
+                $notifiedUserIds[] = $invite->invitee_id;
+            }
+            
+            if ($invite->invitee_email && !in_array($invite->invitee_email, $notifiedEmails)) {
+                \Illuminate\Support\Facades\Mail::to($invite->invitee_email)
+                    ->send(new \App\Mail\EventCancelledMail($this->event, $cancelledBy, $this->cancellationReason));
+                $notifiedEmails[] = $invite->invitee_email;
+            }
+        }
+
+        // Notify RSVPs (In-app)
+        foreach ($rsvps as $rsvp) {
+            if ($rsvp->user_id && !in_array($rsvp->user_id, $notifiedUserIds)) {
+                $this->sendCancellationInAppNotification($rsvp->user_id, $this->event, $cancelledBy, $this->cancellationReason);
+                $notifiedUserIds[] = $rsvp->user_id;
+
+                if ($rsvp->user->email && !in_array($rsvp->user->email, $notifiedEmails)) {
+                    \Illuminate\Support\Facades\Mail::to($rsvp->user->email)
+                        ->send(new \App\Mail\EventCancelledMail($this->event, $cancelledBy, $this->cancellationReason));
+                    $notifiedEmails[] = $rsvp->user->email;
+                }
+            }
+        }
+
+        // Notify Organizers (Exclude the one who cancelled)
+        foreach ($organizers as $organizer) {
+            if ($organizer->id !== $cancelledBy->id && !in_array($organizer->id, $notifiedUserIds)) {
+                $this->sendCancellationInAppNotification($organizer->id, $this->event, $cancelledBy, $this->cancellationReason);
+                $notifiedUserIds[] = $organizer->id;
+
+                 if ($organizer->email && !in_array($organizer->email, $notifiedEmails)) {
+                    \Illuminate\Support\Facades\Mail::to($organizer->email)
+                        ->send(new \App\Mail\EventCancelledMail($this->event, $cancelledBy, $this->cancellationReason));
+                    $notifiedEmails[] = $organizer->email;
+                }
+            }
+        }
+    }
+
+    protected function sendCancellationInAppNotification($userId, $event, $cancelledBy, $reason)
+    {
+        \App\Models\Notification::create([
+            'user_id' => $userId,
+            'type' => 'event_cancelled',
+            'title' => 'Event Cancelled',
+            'message' => "The event '{$event->title}' has been cancelled by {$cancelledBy->name}." . ($reason ? " Reason: {$reason}" : ""),
+            'related_id' => $event->id,
+        ]);
     }
 
     public function sendInvitations()

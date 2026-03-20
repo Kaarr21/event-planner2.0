@@ -21,6 +21,7 @@
                 {{ $event->status === 'published' ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : '' }}
                 {{ $event->status === 'draft' ? 'bg-gray-100 text-gray-700 border-gray-200' : '' }}
                 {{ $event->status === 'archived' ? 'bg-rose-100 text-rose-700 border-rose-200' : '' }}
+                {{ $event->status === 'cancelled' ? 'bg-red-500 text-white border-red-600' : '' }}
             ">
                 {{ $event->status }}
             </span>
@@ -149,6 +150,32 @@
                     </div>
                     <button wire:click="publishEvent(false)" class="ml-auto px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-indigo-600/20">
                         Restore to Live
+                    </button>
+                </div>
+            @endif
+
+            @if($event->status === 'cancelled')
+                <div class="mb-8 p-8 bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-500/20 rounded-[3rem] animate-in fade-in slide-in-from-top-4 duration-500 relative overflow-hidden">
+                    <div class="absolute -top-24 -right-24 w-48 h-48 bg-red-500/10 rounded-full blur-[80px]"></div>
+                    <div class="relative flex flex-col md:flex-row items-center gap-6">
+                        <div class="w-16 h-16 rounded-[1.5rem] bg-red-600 flex items-center justify-center text-white shadow-xl shadow-red-500/20">
+                            <span class="material-symbols-outlined text-3xl">cancel</span>
+                        </div>
+                        <div class="flex-1 text-center md:text-left">
+                            <h4 class="text-xl font-black uppercase tracking-tighter text-red-800 dark:text-red-400">This Event Has Been Cancelled</h4>
+                            <p class="text-sm text-red-700/70 dark:text-red-400/70 mt-1">
+                                {{ $event->cancellation_reason ?: 'No specific reason was provided for this cancellation.' }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
+            @if($this->hasPermission('edit_event') && $event->status !== 'cancelled')
+                <div class="mb-8 flex justify-end">
+                    <button wire:click="confirmCancellation" class="px-6 py-3 bg-white dark:bg-white/5 border border-red-200 dark:border-red-500/20 text-red-600 dark:text-red-400 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all hover:bg-red-50 dark:hover:bg-red-500/10 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-sm">cancel</span>
+                        Cancel Event
                     </button>
                 </div>
             @endif
@@ -640,6 +667,49 @@
             @endif
 
         </div>
+
+        <!-- Cancellation Confirmation Modal -->
+        @if($isConfirmingCancellation)
+            <div class="fixed inset-0 z-[100] overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+                <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                    <div class="fixed inset-0 bg-gray-500/75 dark:bg-gray-900/80 backdrop-blur-sm transition-opacity" aria-hidden="true"></div>
+
+                    <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+                    <div class="inline-block align-bottom bg-white dark:bg-[#1e293b] rounded-[2.5rem] text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-gray-100 dark:border-white/5">
+                        <div class="p-8">
+                            <div class="flex items-center gap-4 mb-6">
+                                <div class="w-12 h-12 rounded-2xl bg-red-50 dark:bg-red-900/20 flex items-center justify-center text-red-600">
+                                    <span class="material-symbols-outlined">warning</span>
+                                </div>
+                                <h3 class="text-xl font-black text-gray-900 dark:text-white uppercase tracking-tighter" id="modal-title">
+                                    Cancel Event?
+                                </h3>
+                            </div>
+
+                            <p class="text-sm text-gray-500 dark:text-gray-400 mb-8 leading-relaxed">
+                                Are you sure you want to cancel **{{ $event->title }}**? This action cannot be undone and will notify all invited guests and participants.
+                            </p>
+
+                            <div class="space-y-2 mb-8">
+                                <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Reason for Cancellation (Optional)</label>
+                                <textarea wire:model="cancellationReason" rows="3" class="w-full bg-gray-50 dark:bg-white/5 border-0 ring-1 ring-gray-200 dark:ring-white/10 text-gray-900 dark:text-white text-sm rounded-2xl focus:ring-2 focus:ring-red-500 p-4 transition-all" placeholder="Tell your guests why the event is being cancelled..."></textarea>
+                                @error('cancellationReason') <span class="text-[10px] text-red-500 font-bold uppercase ml-1">{{ $message }}</span> @enderror
+                            </div>
+
+                            <div class="flex flex-col sm:flex-row-reverse gap-3 mt-10">
+                                <button wire:click="cancelEvent" class="w-full sm:w-auto px-8 py-4 bg-red-600 hover:bg-red-700 text-white text-xs font-black uppercase tracking-widest rounded-2xl shadow-xl shadow-red-500/20 transition-all active:scale-95">
+                                    Yes, Cancel Event
+                                </button>
+                                <button wire:click="$set('isConfirmingCancellation', false)" class="w-full sm:w-auto px-8 py-4 bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-gray-400 text-xs font-black uppercase tracking-widest rounded-2xl transition-all">
+                                    Keep Event
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
 
     </div>
 </div>

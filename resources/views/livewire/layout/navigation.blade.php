@@ -14,6 +14,13 @@ new class extends Component
 
         $this->redirect('/', navigate: true);
     }
+
+    public function with(): array
+    {
+        return [
+            'hasCancelledEvents' => \App\Models\Event::cancelledForUser(auth()->id())->exists(),
+        ];
+    }
 }; ?>
 
 <nav x-data="{ open: false }" class="bg-white dark:bg-[#1e293b] border-b border-gray-100 dark:border-white/10">
@@ -34,9 +41,16 @@ new class extends Component
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" wire:navigate>
                         {{ __('Dashboard') }}
                     </x-nav-link>
-                    <x-nav-link :href="route('events.index')" :active="request()->routeIs('events.*')" wire:navigate>
+                    <x-nav-link :href="route('events.index')" :active="request()->routeIs('events.index')" wire:navigate>
                         {{ __('My Events') }}
                     </x-nav-link>
+
+                    @if($hasCancelledEvents)
+                        <x-nav-link :href="route('events.cancelled')" :active="request()->routeIs('events.cancelled')" wire:navigate>
+                            {{ __('Cancelled') }}
+                        </x-nav-link>
+                    @endif
+
                     <x-nav-link :href="route('notifications.index')" :active="request()->routeIs('notifications.*')" wire:navigate>
                         {{ __('Notifications') }}
                         @php
@@ -127,9 +141,16 @@ new class extends Component
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" wire:navigate>
                 {{ __('Dashboard') }}
             </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('events.index')" :active="request()->routeIs('events.*')" wire:navigate>
+            <x-responsive-nav-link :href="route('events.index')" :active="request()->routeIs('events.index')" wire:navigate>
                 {{ __('My Events') }}
             </x-responsive-nav-link>
+
+            @if($hasCancelledEvents)
+                <x-responsive-nav-link :href="route('events.cancelled')" :active="request()->routeIs('events.cancelled')" wire:navigate>
+                    {{ __('Cancelled') }}
+                </x-responsive-nav-link>
+            @endif
+
             <x-responsive-nav-link :href="route('notifications.index')" :active="request()->routeIs('notifications.*')" wire:navigate>
                 {{ __('Notifications') }}
             </x-responsive-nav-link>

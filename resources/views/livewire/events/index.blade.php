@@ -27,6 +27,7 @@
                             {{ $event->status === 'published' ? 'bg-emerald-500/80 text-white border-emerald-400/30' : '' }}
                             {{ $event->status === 'draft' ? 'bg-amber-500/80 text-white border-amber-400/30' : '' }}
                             {{ $event->status === 'archived' ? 'bg-rose-500/80 text-white border-rose-400/30' : '' }}
+                            {{ $event->status === 'cancelled' ? 'bg-red-600/90 text-white border-red-500/30' : '' }}
                          shadow-lg">
                             {{ $event->status }}
                         </div>

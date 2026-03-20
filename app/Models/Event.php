@@ -9,6 +9,7 @@ class Event extends Model
     const STATUS_DRAFT = 'draft';
     const STATUS_PUBLISHED = 'published';
     const STATUS_ARCHIVED = 'archived';
+    const STATUS_CANCELLED = 'cancelled';
 
     protected $fillable = [
         'title',
@@ -21,6 +22,7 @@ class Event extends Model
         'longitude',
         'google_place_id',
         'status',
+        'cancellation_reason',
     ];
 
     protected $casts = [
@@ -89,10 +91,22 @@ class Event extends Model
     }
 
     /**
-     * Get a setting value.
+     * Scope for cancelled events relevant to a user.
      */
-    public function getSetting($key, $default = null)
+    public function scopeCancelledForUser($query, $userId)
     {
-        return $this->settings[$key] ?? $default;
+        return $query->where('status', self::STATUS_CANCELLED)
+            ->where(function ($q) use ($userId) {
+                $q->where('user_id', $userId)
+                    ->orWhereHas('organizers', function ($oq) use ($userId) {
+                        $oq->where('user_id', $userId);
+                    })
+                    ->orWhereHas('invites', function ($iq) use ($userId) {
+                        $iq->where('invitee_id', $userId);
+                    })
+                    ->orWhereHas('rsvps', function ($rq) use ($userId) {
+                        $rq->where('user_id', $userId);
+                    });
+            });
     }
 }

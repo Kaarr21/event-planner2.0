@@ -16,6 +16,7 @@ Route::view('profile', 'profile')
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/events', \App\Livewire\Events\Index::class)->name('events.index');
+    Route::get('/events/cancelled', \App\Livewire\Events\Cancelled::class)->name('events.cancelled');
     Route::get('/events/create', \App\Livewire\Events\Create::class)->name('events.create');
     Route::get('/events/{event}', \App\Livewire\Events\Show::class)->name('events.show');
     Route::get('/notifications', \App\Livewire\Notifications\Index::class)->name('notifications.index');
