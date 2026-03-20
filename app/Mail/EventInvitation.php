@@ -15,11 +15,18 @@ class EventInvitation extends Mailable
 {
     use Queueable, SerializesModels;
 
+    public $googleUrl;
+    public $outlookUrl;
+
     public function __construct(
         public Event $event,
         public User $inviter,
         public ?string $message = null
-    ) {}
+    ) {
+        $calendarService = new \App\Services\CalendarService();
+        $this->googleUrl = $calendarService->generateGoogleUrl($event);
+        $this->outlookUrl = $calendarService->generateOutlookUrl($event);
+    }
 
     public function envelope(): Envelope
     {
@@ -32,11 +39,23 @@ class EventInvitation extends Mailable
     {
         return new Content(
             markdown: 'emails.event-invitation',
+            with: [
+                'googleUrl' => $this->googleUrl,
+                'outlookUrl' => $this->outlookUrl,
+            ],
         );
     }
 
     public function attachments(): array
     {
-        return [];
+        $calendarService = new \App\Services\CalendarService();
+        $icsContent = $calendarService->generateIcsContent($this->event);
+
+        return [
+            \Illuminate\Mail\Mailables\Attachment::fromData(
+                fn () => $icsContent,
+                'invite.ics'
+            )->withMime('text/calendar; charset=UTF-8; method=REQUEST'),
+        ];
     }
 }

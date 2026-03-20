@@ -12,6 +12,19 @@ They included this message:
 View Event
 </x-mail::button>
 
+## Sync to your Calendar
+Add this event to your calendar to get notifications:
+
+<x-mail::button :url="$googleUrl" color="primary">
+Add to Google Calendar
+</x-mail::button>
+
+<x-mail::button :url="$outlookUrl" color="success">
+Add to Outlook
+</x-mail::button>
+
+*You can also find an `.ics` file attached to this email for other calendar apps.*
+
 If you don't have an account, please [register here]({{ route('register') }}) to see your invitation and notifications.
 
 Thanks,<br>
