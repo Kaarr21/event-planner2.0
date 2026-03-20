@@ -17,16 +17,27 @@
                         @endif
                     </div>
                     
-                    <div class="flex flex-col items-end">
-                        <span class="text-xs px-2 py-0.5 rounded-full font-bold
-                            {{ $invite->status === 'accepted' ? 'bg-green-100 text-green-800' : '' }}
-                            {{ $invite->status === 'pending' ? 'bg-blue-100 text-blue-800' : '' }}
-                            {{ $invite->status === 'declined' ? 'bg-red-100 text-red-800' : '' }}
-                        ">
-                            {{ ucfirst($invite->status) }}
-                        </span>
+                    <div class="flex flex-col items-end gap-2">
+                        <div class="flex items-center gap-2">
+                            @if($invite->status === 'draft')
+                                <button wire:click="$parent.sendDraftInvite({{ $invite->id }})" class="p-1 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors border border-emerald-100" title="Send Invitation">
+                                    <span class="material-symbols-outlined text-sm">send</span>
+                                </button>
+                                <button wire:click="$parent.openEditDraft({{ $invite->id }})" class="p-1 text-amber-600 hover:bg-amber-50 rounded-lg transition-colors border border-amber-100" title="Edit Draft">
+                                    <span class="material-symbols-outlined text-sm">edit</span>
+                                </button>
+                            @endif
+                            <span class="text-[10px] px-2 py-1 rounded-lg font-black uppercase tracking-widest border
+                                {{ $invite->status === 'accepted' ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : '' }}
+                                {{ $invite->status === 'pending' ? 'bg-indigo-100 text-indigo-700 border-indigo-200' : '' }}
+                                {{ $invite->status === 'declined' ? 'bg-rose-100 text-rose-700 border-rose-200' : '' }}
+                                {{ $invite->status === 'draft' ? 'bg-amber-100 text-amber-700 border-amber-200' : '' }}
+                            ">
+                                {{ ucfirst($invite->status) }}
+                            </span>
+                        </div>
                         @if($invite->responded_at)
-                            <span class="text-[10px] text-gray-400 mt-1">{{ \Carbon\Carbon::parse($invite->responded_at)->diffForHumans() }}</span>
+                            <span class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">{{ \Carbon\Carbon::parse($invite->responded_at)->diffForHumans() }}</span>
                         @endif
                     </div>
                 </div>

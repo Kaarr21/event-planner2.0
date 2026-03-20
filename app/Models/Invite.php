@@ -9,7 +9,9 @@ class Invite extends Model
     protected $fillable = [
         'event_id',
         'inviter_id',
+        'invitee_name',
         'invitee_email',
+        'invitee_phone',
         'invitee_id',
         'status',
         'message',

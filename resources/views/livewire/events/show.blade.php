@@ -560,39 +560,66 @@
                         <div class="lg:col-span-2 space-y-8">
                             <!-- Guest List Card -->
                             <div class="bg-white dark:bg-gray-800/50 dark:backdrop-blur-xl overflow-hidden shadow-sm sm:rounded-[2.5rem] border border-gray-100 dark:border-white/5 p-8 md:p-10">
-                                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 no-print">
-                                    <h3 class="text-2xl font-black text-gray-900 dark:text-white uppercase tracking-tighter">Guest List</h3>
+                                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12 no-print">
+                                    <div class="space-y-1">
+                                        <h3 class="text-3xl font-black text-gray-900 dark:text-white uppercase tracking-tight">Guest List</h3>
+                                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Manage your RSVPs and invitations</p>
+                                    </div>
                                     
-                                    <div class="flex items-center gap-2">
+                                    <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
                                         @if($this->hasPermission('manage_invites'))
-                                            <!-- Export Dropdown -->
-                                            <div x-data="{ open: false }" class="relative">
-                                                <button @click="open = !open" class="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 rounded-xl transition-all text-[10px] font-black uppercase tracking-widest text-gray-600 dark:text-gray-400">
-                                                    <span class="material-symbols-outlined text-sm">download</span>
-                                                    Export
-                                                    <span class="material-symbols-outlined text-sm transition-transform" :class="open ? 'rotate-180' : ''">expand_more</span>
+                                            @php $draftCount = $event->invites()->where('status', 'draft')->count(); @endphp
+                                            
+                                            <div class="flex items-center gap-3 w-full sm:w-auto">
+                                                <button wire:click="startImport" class="flex-1 sm:flex-none flex items-center justify-center gap-2 px-8 py-4 bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-black uppercase tracking-widest rounded-2xl shadow-2xl shadow-indigo-600/20 transition-all hover:scale-[1.02] active:scale-95 group">
+                                                    <span class="material-symbols-outlined text-sm group-hover:rotate-12 transition-transform">upload_file</span>
+                                                    Import Guests
                                                 </button>
-                                                
-                                                <div x-show="open" @click.away="open = false" class="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-100 dark:border-white/5 z-50 overflow-hidden" x-transition>
-                                                    <button wire:click="exportToExcel" class="w-full text-left px-5 py-3 text-[10px] font-black uppercase tracking-widest text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/5 flex items-center gap-3">
-                                                        <span class="material-symbols-outlined text-sm text-emerald-500">table_chart</span>
-                                                        Excel (.xlsx)
+
+                                                @if($draftCount > 0)
+                                                    <button wire:click="sendAllDrafts" class="flex-1 sm:flex-none flex items-center justify-center gap-2 px-8 py-4 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-black uppercase tracking-widest rounded-2xl shadow-2xl shadow-emerald-500/20 transition-all hover:scale-[1.02] active:scale-95 group">
+                                                        <span class="material-symbols-outlined text-sm group-hover:translate-x-1 transition-transform">send</span>
+                                                        Send All ({{ $draftCount }})
                                                     </button>
-                                                    <button wire:click="exportToCSV" class="w-full text-left px-5 py-3 text-[10px] font-black uppercase tracking-widest text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/5 flex items-center gap-3">
-                                                        <span class="material-symbols-outlined text-sm text-indigo-500">csv</span>
-                                                        CSV (.csv)
-                                                    </button>
-                                                    <button wire:click="exportToPDF" class="w-full text-left px-5 py-3 text-[10px] font-black uppercase tracking-widest text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/5 flex items-center gap-3">
-                                                        <span class="material-symbols-outlined text-sm text-rose-500">picture_as_pdf</span>
-                                                        PDF (.pdf)
-                                                    </button>
-                                                </div>
+                                                @endif
                                             </div>
 
-                                            <button onclick="window.print()" class="flex items-center gap-2 px-4 py-2 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 rounded-xl transition-all text-[10px] font-black uppercase tracking-widest">
-                                                <span class="material-symbols-outlined text-sm">print</span>
-                                                Print
-                                            </button>
+                                            <div class="h-8 w-px bg-gray-100 dark:bg-white/10 mx-2 hidden sm:block"></div>
+
+                                            <div class="flex items-center gap-2">
+                                                <!-- Export Dropdown -->
+                                                <div x-data="{ open: false }" class="relative">
+                                                    <button @click="open = !open" class="flex items-center gap-2 px-5 py-3 bg-gray-50 dark:bg-white/5 hover:bg-gray-100 dark:hover:bg-white/10 rounded-2xl transition-all text-[10px] font-black uppercase tracking-widest text-gray-600 dark:text-gray-400">
+                                                        <span class="material-symbols-outlined text-sm">download</span>
+                                                        Export
+                                                    </button>
+                                                    
+                                                    <div x-show="open" @click.away="open = false" class="absolute right-0 mt-3 w-56 bg-white dark:bg-[#0f172a] rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-gray-100 dark:border-white/5 z-50 overflow-hidden" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100">
+                                                        <button wire:click="exportToExcel" class="w-full text-left px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/5 flex items-center gap-3 transition-colors">
+                                                            <div class="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center text-emerald-600">
+                                                                <span class="material-symbols-outlined text-sm">table_chart</span>
+                                                            </div>
+                                                            Excel (.xlsx)
+                                                        </button>
+                                                        <button wire:click="exportToCSV" class="w-full text-left px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/5 flex items-center gap-3 transition-colors">
+                                                            <div class="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center text-indigo-600">
+                                                                <span class="material-symbols-outlined text-sm">csv</span>
+                                                            </div>
+                                                            CSV (.csv)
+                                                        </button>
+                                                        <button wire:click="exportToPDF" class="w-full text-left px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/5 flex items-center gap-3 transition-colors">
+                                                            <div class="w-8 h-8 rounded-xl bg-rose-50 dark:bg-rose-500/10 flex items-center justify-center text-rose-600">
+                                                                <span class="material-symbols-outlined text-sm">picture_as_pdf</span>
+                                                            </div>
+                                                            PDF (.pdf)
+                                                        </button>
+                                                    </div>
+                                                </div>
+
+                                                <button onclick="window.print()" class="flex items-center justify-center w-12 h-12 bg-gray-50 dark:bg-white/5 hover:bg-gray-100 dark:hover:bg-white/10 text-gray-500 dark:text-gray-400 rounded-2xl transition-all">
+                                                    <span class="material-symbols-outlined text-xl">print</span>
+                                                </button>
+                                            </div>
                                         @endif
                                     </div>
                                 </div>
@@ -601,26 +628,48 @@
                                     <h1 class="text-3xl font-black uppercase tracking-tighter">{{ $event->title }}</h1>
                                     <p class="text-gray-500">Approved Guest List • Generated {{ now()->format('M d, Y') }}</p>
                                 </div>
-                                <div class="space-y-6 print-container">
-                                    @forelse ($rsvps as $rsvp)
-                                        <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-white/5 rounded-2xl">
-                                            <div class="flex items-center gap-4">
-                                                <div class="h-12 w-12 rounded-2xl bg-indigo-100 dark:bg-indigo-500/20 flex items-center justify-center text-indigo-700 dark:text-indigo-400 font-black text-lg">
-                                                    {{ substr($rsvp->user->name, 0, 1) }}
+                                <div class="space-y-12">
+                                    <div class="space-y-6 print-container">
+                                        <h4 class="text-[10px] font-black uppercase tracking-widest text-gray-400 flex items-center gap-2 ml-4">
+                                            <span class="material-symbols-outlined text-sm">how_to_reg</span>
+                                            RSVP Responses
+                                        </h4>
+                                        @forelse ($rsvps as $rsvp)
+                                            <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-white/5 rounded-2xl border border-transparent hover:border-gray-100 dark:hover:border-white/10 transition-all">
+                                                <div class="flex items-center gap-4">
+                                                    <div class="h-12 w-12 rounded-2xl bg-indigo-100 dark:bg-indigo-500/20 flex items-center justify-center text-indigo-700 dark:text-indigo-400 font-black text-lg">
+                                                        {{ substr($rsvp->user->name, 0, 1) }}
+                                                    </div>
+                                                    <div>
+                                                        <p class="text-base font-bold text-gray-900 dark:text-white leading-none mb-1">{{ $rsvp->user->name }}</p>
+                                                        <p class="text-xs text-gray-500 font-medium">{{ $rsvp->user->email }}</p>
+                                                    </div>
                                                 </div>
-                                                <div>
-                                                    <p class="text-base font-bold text-gray-900 dark:text-white">{{ $rsvp->user->name }}</p>
-                                                    <p class="text-xs text-gray-500 font-medium">{{ $rsvp->user->email }}</p>
-                                                </div>
+                                                <span class="text-[10px] px-2.5 py-1 rounded-lg font-black uppercase tracking-widest border
+                                                    {{ $rsvp->status === 'attending' ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : '' }}
+                                                    {{ $rsvp->status === 'maybe' ? 'bg-amber-100 text-amber-700 border-amber-200' : '' }}
+                                                    {{ $rsvp->status === 'declined' ? 'bg-rose-100 text-rose-700 border-rose-200' : '' }}
+                                                ">
+                                                    {{ $rsvp->status }}
+                                                </span>
                                             </div>
-                                                {{ $rsvp->status }}
-                                            </span>
+                                        @empty
+                                            <div class="text-center py-12 bg-gray-50 dark:bg-white/5 rounded-[2rem] border border-dashed border-gray-200 dark:border-white/10">
+                                                <span class="material-symbols-outlined text-4xl text-gray-300 dark:text-white/10 mb-3">person_search</span>
+                                                <p class="text-xs font-black text-gray-500 uppercase tracking-widest">No RSVPs yet.</p>
+                                            </div>
+                                        @endforelse
+                                    </div>
+
+                                    @if($this->hasPermission('manage_invites'))
+                                        <div class="pt-10 border-t border-gray-100 dark:border-white/5 space-y-6">
+                                            <h4 class="text-[10px] font-black uppercase tracking-widest text-gray-400 flex items-center gap-2 ml-4">
+                                                <span class="material-symbols-outlined text-sm">mail</span>
+                                                Invitations & Drafts
+                                            </h4>
+                                            <livewire:events.invited-list :event="$event" />
                                         </div>
-                                    @empty
-                                        <div class="text-center py-10">
-                                            <p class="text-gray-500 font-medium">No guests have RSVPed yet.</p>
-                                        </div>
-                                    @endforelse
+                                    @endif
                                 </div>
                             </div>
                         </div>
@@ -651,7 +700,9 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                         @if($this->hasPermission('manage_invites'))
                             <div class="bg-white dark:bg-gray-800/50 dark:backdrop-blur-xl rounded-[2.5rem] p-8 border border-gray-100 dark:border-white/5 shadow-sm">
-                                <h4 class="text-xl font-black uppercase tracking-tighter mb-8 text-gray-900 dark:text-white">Invited Members</h4>
+                                <div class="flex items-center justify-between mb-8">
+                                    <h4 class="text-xl font-black uppercase tracking-tighter text-gray-900 dark:text-white">Invited Members</h4>
+                                </div>
                                 <livewire:events.invited-list :event="$event" />
                             </div>
                         @endif
@@ -704,6 +755,291 @@
                                 <button wire:click="$set('isConfirmingCancellation', false)" class="w-full sm:w-auto px-8 py-4 bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-gray-400 text-xs font-black uppercase tracking-widest rounded-2xl transition-all">
                                     Keep Event
                                 </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
+
+        <!-- Guest Import Modal -->
+        @if($isImporting)
+            <div class="fixed inset-0 z-[100] overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+                <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                    <div class="fixed inset-0 bg-gray-500/75 dark:bg-gray-900/80 backdrop-blur-sm transition-opacity" aria-hidden="true" wire:click="$set('isImporting', false)"></div>
+
+                    <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+                    <div class="relative inline-block align-middle bg-white dark:bg-[#0f172a] rounded-[3rem] text-left shadow-[0_40px_80px_-20px_rgba(0,0,0,0.2)] transform transition-all sm:my-8 sm:max-w-4xl sm:w-full border border-white/20 dark:border-white/10 mx-4 overflow-hidden">
+                        <div class="p-10 border-b border-gray-100 dark:border-white/5">
+                            <div class="flex justify-between items-start">
+                                <div class="space-y-1">
+                                    <h3 class="text-3xl font-black text-gray-900 dark:text-white tracking-tight uppercase">Import Guests</h3>
+                                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Upload your guest list in bulk</p>
+                                </div>
+                                <button wire:click="$set('isImporting', false)" class="w-12 h-12 rounded-2xl bg-gray-50 dark:bg-white/5 flex items-center justify-center text-gray-400 hover:text-gray-900 dark:hover:text-white transition-all hover:rotate-90">
+                                    <span class="material-symbols-outlined text-xl">close</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="p-10 overflow-y-auto max-h-[70vh]">
+                            @if (session()->has('error'))
+                                <div class="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center gap-3 text-red-500 text-xs font-bold uppercase tracking-widest">
+                                    <span class="material-symbols-outlined text-sm">error</span>
+                                    {{ session('error') }}
+                                </div>
+                            @endif
+                            @if (session()->has('message'))
+                                <div class="mb-6 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl flex items-center gap-3 text-emerald-500 text-xs font-bold uppercase tracking-widest">
+                                    <span class="material-symbols-outlined text-sm">check_circle</span>
+                                    {{ session('message') }}
+                                </div>
+                            @endif
+
+                            @if(empty($importedGuests))
+                                <div class="space-y-10">
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                        <div class="p-8 bg-indigo-50 dark:bg-indigo-500/5 rounded-[2.5rem] border border-indigo-100 dark:border-indigo-500/10 space-y-4">
+                                            <div class="w-12 h-12 rounded-2xl bg-indigo-100 dark:bg-indigo-500/20 flex items-center justify-center text-indigo-600">
+                                                <span class="material-symbols-outlined text-2xl">download</span>
+                                            </div>
+                                            <h4 class="text-lg font-black text-gray-900 dark:text-white uppercase tracking-tight">Step 1: Get Template</h4>
+                                            <p class="text-sm text-gray-500 leading-relaxed uppercase font-bold text-[10px] tracking-wide">Download our formatted Excel template to ensure your guest data is imported correctly.</p>
+                                            <button wire:click="downloadTemplate" class="inline-flex items-center gap-2 text-[10px] font-black text-indigo-600 hover:text-indigo-700 uppercase tracking-widest bg-white dark:bg-white/5 px-4 py-2 rounded-xl shadow-sm transition-all hover:scale-105">
+                                                Download Template
+                                                <span class="material-symbols-outlined text-xs">arrow_forward</span>
+                                            </button>
+                                        </div>
+
+                                        <div class="p-8 bg-emerald-50 dark:bg-emerald-500/5 rounded-[2.5rem] border border-emerald-100 dark:border-emerald-500/10 space-y-4">
+                                            <div class="w-12 h-12 rounded-2xl bg-emerald-100 dark:bg-emerald-500/20 flex items-center justify-center text-emerald-600">
+                                                <span class="material-symbols-outlined text-2xl">upload</span>
+                                            </div>
+                                            <h4 class="text-lg font-black text-gray-900 dark:text-white uppercase tracking-tight">Step 2: Upload File</h4>
+                                            <p class="text-sm text-gray-500 leading-relaxed uppercase font-bold text-[10px] tracking-wide">Once your template is ready, upload the file (Excel or CSV) to review your guests.</p>
+                                        </div>
+                                    </div>
+
+                                    <div class="relative group">
+                                        <div class="absolute inset-0 bg-indigo-600/5 dark:bg-indigo-500/10 rounded-[3rem] border-2 border-dashed border-indigo-200 dark:border-indigo-500/20 group-hover:bg-indigo-600/10 transition-all pointer-events-none"></div>
+                                        <input type="file" wire:model="guestImportFile" class="relative z-10 w-full opacity-0 h-64 cursor-pointer">
+                                        <div class="absolute inset-0 flex flex-col items-center justify-center gap-4 pointer-events-none">
+                                            <div class="w-20 h-20 rounded-3xl bg-white dark:bg-white/5 shadow-2xl flex items-center justify-center text-indigo-600 group-hover:scale-110 transition-transform">
+                                                <span class="material-symbols-outlined text-4xl">cloud_upload</span>
+                                            </div>
+                                            <div class="text-center">
+                                                <p class="text-base font-black text-gray-900 dark:text-white tracking-tight">Drop your file here or click to browse</p>
+                                                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">Supports XLSX, XLS, and CSV</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div wire:loading wire:target="guestImportFile" class="w-full">
+                                        <div class="flex items-center justify-center gap-4 p-8 bg-gray-50 dark:bg-white/5 rounded-[2.5rem]">
+                                            <div class="w-6 h-6 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+                                            <p class="text-[10px] font-black text-gray-500 uppercase tracking-widest">Processing your guest list...</p>
+                                        </div>
+                                    </div>
+
+                                    @if($guestImportFile)
+                                        <div class="flex items-center justify-between p-6 bg-white dark:bg-white/5 rounded-[2rem] border border-emerald-100 dark:border-emerald-500/20 animate-in fade-in zoom-in-95">
+                                            <div class="flex items-center gap-4">
+                                                <div class="w-12 h-12 rounded-2xl bg-emerald-100 dark:bg-emerald-500/20 flex items-center justify-center text-emerald-600">
+                                                    <span class="material-symbols-outlined text-2xl">check_circle</span>
+                                                </div>
+                                                <div>
+                                                    <p class="text-sm font-black text-gray-900 dark:text-white uppercase tracking-tight">File Ready</p>
+                                                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">{{ $guestImportFile->getClientOriginalName() }}</p>
+                                                </div>
+                                            </div>
+                                            <button wire:click="uploadGuests" class="px-8 py-4 bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-black uppercase tracking-widest rounded-2xl shadow-xl shadow-indigo-600/20 transition-all">
+                                                Process Guests
+                                            </button>
+                                        </div>
+                                    @endif
+                                </div>
+                            @else
+                                <div class="space-y-8">
+                                    <div class="flex flex-col sm:flex-row justify-between items-center gap-6 p-6 bg-indigo-50 dark:bg-indigo-500/10 rounded-[2.5rem] border border-indigo-100 dark:border-indigo-500/10">
+                                        <div class="space-y-1">
+                                            <h4 class="text-lg font-black text-gray-900 dark:text-white uppercase tracking-tight">Review Imported Guests</h4>
+                                            <p class="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Total: {{ count($importedGuests) }} guests found</p>
+                                        </div>
+                                        <div class="relative w-full sm:w-64">
+                                            <span class="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-sm text-gray-400">search</span>
+                                            <input type="text" wire:model.live="draftSearch" placeholder="Search imported list..." class="w-full pl-10 pr-4 py-3 bg-white dark:bg-white/5 border-0 ring-1 ring-gray-100 dark:ring-white/10 rounded-xl text-xs font-bold transition-all focus:ring-2 focus:ring-indigo-500">
+                                        </div>
+                                    </div>
+
+                                    <div class="bg-white dark:bg-white/5 rounded-[2.5rem] border border-gray-100 dark:border-white/10 overflow-hidden">
+                                        <table class="w-full text-left border-collapse">
+                                            <thead class="bg-gray-50/50 dark:bg-white/5 border-b border-gray-100 dark:border-white/10">
+                                                <tr>
+                                                    <th class="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest">Name</th>
+                                                    <th class="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest">Email</th>
+                                                    <th class="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest">Phone</th>
+                                                    <th class="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest"></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="space-y-2">
+                                                @php
+                                                    $filteredGuests = collect($importedGuests)->filter(function($guest) {
+                                                        if (empty($this->draftSearch)) return true;
+                                                        $search = strtolower($this->draftSearch);
+                                                        return str_contains(strtolower($guest['name']), $search) || 
+                                                               str_contains(strtolower($guest['email']), $search);
+                                                    });
+                                                @endphp
+                                                @foreach($filteredGuests as $index => $guest)
+                                                <tr class="bg-gray-50 dark:bg-white/5 rounded-2xl border-4 border-white dark:border-[#1e293b] group/row">
+                                                    <td class="p-4 pl-6 rounded-l-2xl">
+                                                        <div class="flex items-center gap-2">
+                                                            <span class="material-symbols-outlined text-xs text-gray-300 dark:text-slate-600 group-hover/row:text-indigo-500 transition-colors">edit</span>
+                                                            <input type="text" 
+                                                                   wire:change="updateImportedGuest({{ $index }}, 'name', $event.target.value)"
+                                                                   value="{{ $guest['name'] }}"
+                                                                   class="w-full bg-transparent border-0 p-0 text-sm font-bold focus:ring-0 {{ isset($guest['errors']['name']) ? 'text-red-500' : 'text-gray-900 dark:text-white' }}">
+                                                        </div>
+                                                        @if(isset($guest['errors']['name']))
+                                                            <div class="text-[9px] font-black text-red-500 uppercase tracking-widest mt-1 ml-6">{{ $guest['errors']['name'] }}</div>
+                                                        @endif
+                                                    </td>
+                                                    <td class="p-4">
+                                                        <div class="flex items-center gap-2">
+                                                            <span class="material-symbols-outlined text-xs text-gray-300 dark:text-slate-600 group-hover/row:text-indigo-500 transition-colors">alternate_email</span>
+                                                            <input type="email" 
+                                                                   wire:change="updateImportedGuest({{ $index }}, 'email', $event.target.value)"
+                                                                   value="{{ $guest['email'] }}"
+                                                                   class="w-full bg-transparent border-0 p-0 text-sm font-bold focus:ring-0 {{ isset($guest['errors']['email']) ? 'text-red-500' : 'text-gray-900 dark:text-white' }}">
+                                                        </div>
+                                                        @if(isset($guest['errors']['email']))
+                                                            <div class="text-[9px] font-black text-red-500 uppercase tracking-widest mt-1 ml-6">{{ $guest['errors']['email'] }}</div>
+                                                        @endif
+                                                    </td>
+                                                    <td class="p-4">
+                                                        <div class="flex items-center gap-2">
+                                                            <span class="material-symbols-outlined text-xs text-gray-300 dark:text-slate-600 group-hover/row:text-indigo-500 transition-colors">phone_iphone</span>
+                                                            <input type="text" 
+                                                                   wire:change="updateImportedGuest({{ $index }}, 'phone', $event.target.value)"
+                                                                   value="{{ $guest['phone'] }}"
+                                                                   class="w-full bg-transparent border-0 p-0 text-sm font-bold focus:ring-0 text-gray-600 dark:text-gray-400">
+                                                        </div>
+                                                    </td>
+                                                    <td class="p-4 pr-6 rounded-r-2xl text-right">
+                                                        <button wire:click="removeImportedGuest({{ $index }})" class="text-gray-300 hover:text-red-500 transition-colors">
+                                                            <span class="material-symbols-outlined text-lg">delete</span>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mt-8 pt-8 border-t border-gray-100 dark:border-white/5">
+                                    <button wire:click="$set('importedGuests', [])" class="text-xs font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest hover:text-gray-700">
+                                        Clear List & Start Over
+                                    </button>
+                                    <div class="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                                        @php
+                                            $hasErrors = collect($importedGuests)->pluck('errors')->flatten()->isNotEmpty();
+                                        @endphp
+                                        <button wire:click="finalizeImport(true)" 
+                                                {{ $hasErrors ? 'disabled' : '' }}
+                                                class="px-8 py-4 bg-gray-100 dark:bg-white/10 text-gray-900 dark:text-white text-xs font-black uppercase tracking-widest rounded-2xl transition-all hover:bg-gray-200 dark:hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed">
+                                            Save as Draft
+                                        </button>
+                                        <button wire:click="finalizeImport(false)" 
+                                                {{ $hasErrors ? 'disabled' : '' }}
+                                                class="px-8 py-4 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black uppercase tracking-widest rounded-2xl shadow-xl shadow-indigo-500/20 transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
+                                            Send Invites Now
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="mt-4 text-center">
+                                    <button wire:click="$set('isImporting', false)" class="text-[10px] font-black text-gray-400 uppercase tracking-widest hover:text-gray-600 transition-colors">Close Modal</button>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
+
+        <!-- Draft Edit Modal -->
+        @if($isEditingDraft)
+            <div class="fixed inset-0 z-[200] overflow-y-auto" role="dialog" aria-modal="true">
+                <div class="flex items-center justify-center min-h-screen p-4 text-center sm:p-0">
+                    <!-- Backdrop with heavy blur -->
+                    <div class="fixed inset-0 bg-gray-900/40 backdrop-blur-2xl transition-opacity duration-500" aria-hidden="true" wire:click="$set('isEditingDraft', false)"></div>
+
+                    <!-- Modal Panel -->
+                    <div class="relative inline-block align-middle bg-white dark:bg-[#0f172a] rounded-[3rem] text-left overflow-hidden shadow-[0_40px_80px_-20px_rgba(0,0,0,0.2)] transform transition-all sm:my-8 sm:max-w-xl sm:w-full border border-white/20 dark:border-white/10 mx-4">
+                        <div class="p-10">
+                            <!-- Header -->
+                            <div class="flex justify-between items-start mb-10">
+                                <div class="space-y-1">
+                                    <h3 class="text-3xl font-black text-gray-900 dark:text-white tracking-tight uppercase">Edit Guest</h3>
+                                    <p class="text-[10px] font-black text-amber-500 uppercase tracking-widest flex items-center gap-2">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                                        Draft Invitation
+                                    </p>
+                                </div>
+                                <button wire:click="$set('isEditingDraft', false)" class="w-12 h-12 rounded-2xl bg-gray-50 dark:bg-white/5 flex items-center justify-center text-gray-400 hover:text-gray-900 dark:hover:text-white transition-all hover:rotate-90">
+                                    <span class="material-symbols-outlined text-xl">close</span>
+                                </button>
+                            </div>
+
+                            <!-- Form -->
+                            <div class="space-y-8">
+                                <div class="group">
+                                    <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-1 group-focus-within:text-indigo-500 transition-colors">Guest Name</label>
+                                    <div class="relative">
+                                        <input type="text" wire:model="editDraftName" 
+                                               class="w-full bg-gray-50 dark:bg-white/5 border-0 ring-1 ring-gray-100 dark:ring-white/10 text-gray-900 dark:text-white text-base font-bold rounded-2xl focus:ring-2 focus:ring-indigo-500 p-5 transition-all outline-none" 
+                                               placeholder="Full name">
+                                    </div>
+                                    @error('editDraftName') <p class="text-[9px] text-red-500 font-bold uppercase mt-2 ml-1">{{ $message }}</p> @enderror
+                                </div>
+
+                                <div class="group">
+                                    <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-1 group-focus-within:text-indigo-500 transition-colors">Email Address</label>
+                                    <div class="relative">
+                                        <input type="email" wire:model="editDraftEmail" 
+                                               class="w-full bg-gray-50 dark:bg-white/5 border-0 ring-1 ring-gray-100 dark:ring-white/10 text-gray-900 dark:text-white text-base font-bold rounded-2xl focus:ring-2 focus:ring-indigo-500 p-5 transition-all outline-none" 
+                                               placeholder="email@example.com">
+                                    </div>
+                                    @error('editDraftEmail') <p class="text-[9px] text-red-500 font-bold uppercase mt-2 ml-1">{{ $message }}</p> @enderror
+                                </div>
+
+                                <div class="group">
+                                    <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-1 group-focus-within:text-indigo-500 transition-colors">Phone Number</label>
+                                    <div class="relative">
+                                        <input type="text" wire:model="editDraftPhone" 
+                                               class="w-full bg-gray-50 dark:bg-white/5 border-0 ring-1 ring-gray-100 dark:ring-white/10 text-gray-900 dark:text-white text-base font-bold rounded-2xl focus:ring-2 focus:ring-indigo-500 p-5 transition-all outline-none" 
+                                               placeholder="+1 (555) 000-0000">
+                                    </div>
+                                    @error('editDraftPhone') <p class="text-[9px] text-red-500 font-bold uppercase mt-2 ml-1">{{ $message }}</p> @enderror
+                                </div>
+                            </div>
+
+                            <!-- Footer Actions -->
+                            <div class="flex flex-col gap-4 mt-12">
+                                <button wire:click="updateDraft" 
+                                        class="w-full py-5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black uppercase tracking-widest rounded-2xl shadow-2xl shadow-indigo-600/30 transition-all hover:scale-[1.02] active:scale-95">
+                                    Save Changes
+                                </button>
+                                <div class="flex gap-4">
+                                    <button wire:click="deleteInvite({{ $editingDraftId }})" 
+                                            class="flex-1 py-4 bg-rose-50 dark:bg-rose-900/10 text-rose-600 dark:text-rose-400 text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-rose-100 dark:hover:bg-rose-900/20 transition-all">
+                                        Delete Draft
+                                    </button>
+                                    <button wire:click="$set('isEditingDraft', false)" 
+                                            class="flex-1 py-4 bg-gray-50 dark:bg-white/5 text-gray-500 dark:text-gray-400 text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-gray-100 dark:hover:bg-white/10 transition-all">
+                                        Cancel
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>

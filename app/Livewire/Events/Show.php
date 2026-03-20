@@ -12,9 +12,13 @@ use Maatwebsite\Excel\Facades\Excel;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Exports\GuestListExport;
 use App\Exports\TasksExport;
+use App\Exports\GuestTemplateExport;
+use App\Imports\GuestImport;
+use Livewire\WithFileUploads;
 
 class Show extends Component
 {
+    use WithFileUploads;
     public Event $event;
     public $userPermissions = [];
     public $userRole = null; // owner, organizer, guest, invited
@@ -43,6 +47,17 @@ class Show extends Component
     public $isConfirmingCancellation = false;
     public $cancellationReason = '';
 
+    // Import & Draft properties
+    public $isImporting = false;
+    public $guestImportFile;
+    public $importedGuests = [];
+    public $draftSearch = '';
+    public $isEditingDraft = false;
+    public $editingDraftId = null;
+    public $editDraftName;
+    public $editDraftEmail;
+    public $editDraftPhone;
+
     // Tab Management
     public $activeTab = 'overview';
 
@@ -68,6 +83,9 @@ class Show extends Component
         'completionComment' => 'nullable|string',
         'locationSearch' => 'nullable|string|max:255',
         'cancellationReason' => 'nullable|string|max:1000',
+        'editDraftName' => 'required|string|max:255',
+        'editDraftEmail' => 'required|email|max:255',
+        'editDraftPhone' => 'nullable|string|max:20',
     ];
 
     public function mount(Event $event)
@@ -494,6 +512,222 @@ class Show extends Component
         $this->event->update(['status' => Event::STATUS_ARCHIVED]);
         session()->flash('message', 'Event archived.');
         $this->dispatch('event-updated');
+    }
+
+    public function downloadTemplate()
+    {
+        if (!$this->hasPermission('manage_invites')) return abort(403);
+        return Excel::download(new GuestTemplateExport, 'guest-import-template.xlsx');
+    }
+
+    public function startImport()
+    {
+        if (!$this->hasPermission('manage_invites')) return abort(403);
+        $this->isImporting = true;
+        $this->importedGuests = [];
+        $this->guestImportFile = null;
+    }
+
+    public function uploadGuests()
+    {
+        if (!$this->hasPermission('manage_invites')) return abort(403);
+        
+        $this->validate([
+            'guestImportFile' => 'required|mimes:xlsx,csv,xls|max:10240',
+        ]);
+
+        $rows = Excel::toCollection(new GuestImport, $this->guestImportFile->getRealPath())->first();
+        
+        if ($rows) {
+            $this->importedGuests = $rows->map(function ($row) {
+                // Determine keys based on the template headings
+                // Maatwebsite Excel by default slugifies headings
+                $name = $row['name'] ?? null;
+                $email = $row['email'] ?? null;
+                $phone = $row['phone_number'] ?? null;
+
+                return [
+                    'name' => $name,
+                    'email' => $email,
+                    'phone' => $phone,
+                    'errors' => $this->validateRow($name, $email),
+                ];
+            })->toArray();
+        }
+
+        $this->guestImportFile = null;
+    }
+
+    protected function validateRow($name, $email)
+    {
+        $errors = [];
+        if (empty($name)) $errors['name'] = 'Name is required';
+        if (empty($email)) {
+            $errors['email'] = 'Email is required';
+        } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $errors['email'] = 'Invalid email format';
+        }
+        return $errors;
+    }
+
+    public function updateImportedGuest($index, $field, $value)
+    {
+        if (!$this->hasPermission('manage_invites')) return abort(403);
+        
+        $this->importedGuests[$index][$field] = $value;
+        $this->importedGuests[$index]['errors'] = $this->validateRow(
+            $this->importedGuests[$index]['name'],
+            $this->importedGuests[$index]['email']
+        );
+    }
+
+    public function removeImportedGuest($index)
+    {
+        unset($this->importedGuests[$index]);
+        $this->importedGuests = array_values($this->importedGuests);
+    }
+
+    public function finalizeImport($asDraft = true)
+    {
+        if (!$this->hasPermission('manage_invites')) return abort(403);
+
+        // Check for any remaining errors
+        foreach ($this->importedGuests as $guest) {
+            if (!empty($guest['errors'])) {
+                session()->flash('error', 'Please correct all errors before importing.');
+                return;
+            }
+        }
+
+        $count = count($this->importedGuests);
+        foreach ($this->importedGuests as $guestData) {
+            // Check if already invited to avoid duplicates
+            $existingInvite = $this->event->invites()
+                ->where('invitee_email', $guestData['email'])
+                ->first();
+            
+            if ($existingInvite) continue;
+
+            $this->event->invites()->create([
+                'inviter_id' => \Illuminate\Support\Facades\Auth::id(),
+                'invitee_name' => $guestData['name'],
+                'invitee_email' => $guestData['email'],
+                'invitee_phone' => $guestData['phone'],
+                'status' => $asDraft ? 'draft' : 'pending',
+            ]);
+        }
+
+        $this->isImporting = false;
+        $this->importedGuests = [];
+        $this->draftSearch = '';
+        session()->flash('message', $count . ' guests ' . ($asDraft ? 'saved as drafts.' : 'processed.'));
+        $this->dispatch('event-updated');
+    }
+
+    public function deleteInvite($inviteId)
+    {
+        if (!$this->hasPermission('manage_invites')) return abort(403);
+
+        $invite = $this->event->invites()->find($inviteId);
+        if ($invite) {
+            $invite->delete();
+            if ($inviteId == $this->editingDraftId) {
+                $this->isEditingDraft = false;
+                $this->editingDraftId = null;
+            }
+            $this->event->refresh();
+            session()->flash('message', 'Invitation removed.');
+        }
+    }
+
+    public function sendDraftInvite($inviteId)
+    {
+        if (!$this->hasPermission('manage_invites')) return abort(403);
+
+        $invite = $this->event->invites()->where('status', 'draft')->find($inviteId);
+        if ($invite) {
+            $this->processInvite($invite);
+            session()->flash('message', 'Invitation sent to ' . $invite->invitee_email);
+        }
+    }
+
+    public function sendAllDrafts()
+    {
+        if (!$this->hasPermission('manage_invites')) return abort(403);
+
+        $drafts = $this->event->invites()->where('status', 'draft')->get();
+        $count = 0;
+
+        foreach ($drafts as $invite) {
+            $this->processInvite($invite);
+            $count++;
+        }
+
+        session()->flash('message', $count . ' invitations sent successfully!');
+        $this->dispatch('event-updated');
+    }
+
+    public function openEditDraft($inviteId)
+    {
+        if (!$this->hasPermission('manage_invites')) return abort(403);
+
+        $invite = $this->event->invites()->where('status', 'draft')->find($inviteId);
+        if ($invite) {
+            $this->editingDraftId = $invite->id;
+            $this->editDraftName = $invite->invitee_name;
+            $this->editDraftEmail = $invite->invitee_email;
+            $this->editDraftPhone = $invite->invitee_phone;
+            $this->isEditingDraft = true;
+        }
+    }
+
+    public function updateDraft()
+    {
+        if (!$this->hasPermission('manage_invites')) return abort(403);
+
+        $this->validate([
+            'editDraftName' => 'required|string|max:255',
+            'editDraftEmail' => 'required|email|max:255',
+            'editDraftPhone' => 'nullable|string|max:20',
+        ]);
+
+        $invite = $this->event->invites()->where('status', 'draft')->find($this->editingDraftId);
+        if ($invite) {
+            $invite->update([
+                'invitee_name' => $this->editDraftName,
+                'invitee_email' => $this->editDraftEmail,
+                'invitee_phone' => $this->editDraftPhone,
+            ]);
+            $this->isEditingDraft = false;
+            $this->event->refresh();
+            session()->flash('message', 'Draft invitation updated!');
+        }
+    }
+
+    protected function processInvite($invite)
+    {
+        // Add notification for registered users
+        $user = User::where('email', $invite->invitee_email)->first();
+        if ($user) {
+            $invite->update(['invitee_id' => $user->id]);
+            
+            \App\Models\Notification::create([
+                'user_id' => $user->id,
+                'type' => 'invite',
+                'title' => 'Event Invitation',
+                'message' => Auth::user()->name . " has invited you to: " . $this->event->title,
+                'related_id' => $invite->id,
+            ]);
+        }
+
+        // Send Email
+        \Illuminate\Support\Facades\Mail::to($invite->invitee_email)
+            ->send(new \App\Mail\EventInvitation($this->event, Auth::user(), $invite->message));
+        
+        $invite->update([
+            'status' => 'pending',
+            'invited_at' => now()
+        ]);
     }
 
     public function confirmCancellation()
