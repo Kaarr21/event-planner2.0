@@ -109,4 +109,12 @@ class Event extends Model
                     });
             });
     }
+
+    /**
+     * Get a specific setting or a default value.
+     */
+    public function getSetting(string $key, $default = null)
+    {
+        return $this->settings[$key] ?? $default;
+    }
 }
