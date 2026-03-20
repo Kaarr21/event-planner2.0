@@ -1,5 +1,25 @@
 <div class="py-12">
     <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+        @if (session('message'))
+            <div class="mb-8 bg-emerald-500/10 border border-emerald-500/20 backdrop-blur-xl p-4 rounded-xl flex items-center justify-between gap-4 animate-in fade-in slide-in-from-top-4 duration-500">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                        <span class="material-symbols-outlined text-emerald-500">check_circle</span>
+                    </div>
+                    <div>
+                        <p class="text-sm font-bold text-gray-900 dark:text-white">{{ session('message') }}</p>
+                        @if (session('show_invite_reminder'))
+                            <p class="text-xs text-emerald-600/80 dark:text-emerald-400/80 font-medium">Your event is live! Now, let's bring in the guests.</p>
+                        @endif
+                    </div>
+                </div>
+                @if (session('show_invite_reminder'))
+                    <a href="{{ route('events.show', session('new_event_id')) }}" class="bg-emerald-500 hover:bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-lg transition-all shadow-lg shadow-emerald-500/20">
+                        Invite Guests Now
+                    </a>
+                @endif
+            </div>
+        @endif
         <div class="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-6">
             <div>
                 <h2 class="text-4xl font-extrabold text-gray-900 dark:text-slate-100 tracking-tight">My Events</h2>

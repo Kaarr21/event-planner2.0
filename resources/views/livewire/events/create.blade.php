@@ -43,6 +43,28 @@
                         </div>
                     </div>
 
+                    <div class="pt-6 border-t border-gray-100 dark:border-gray-700">
+                        <div class="flex items-center gap-2 mb-4">
+                            <span class="material-symbols-outlined text-indigo-500">group_add</span>
+                            <h3 class="text-lg font-bold text-gray-900 dark:text-white">Invite Guests (Optional)</h3>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <div>
+                                <x-input-label for="inviteEmails" :value="__('Guest Emails')" />
+                                <p class="text-xs text-gray-500 mb-2">Separate emails with commas or new lines.</p>
+                                <textarea wire:model="inviteEmails" id="inviteEmails" name="inviteEmails" class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm" rows="3" placeholder="friend@example.com, colleague@work.com"></textarea>
+                                <x-input-error class="mt-2" :messages="$errors->get('inviteEmails')" />
+                            </div>
+
+                            <div>
+                                <x-input-label for="inviteMessage" :value="__('Personal Message')" />
+                                <x-text-input wire:model="inviteMessage" id="inviteMessage" name="inviteMessage" type="text" class="mt-1 block w-full" placeholder="Hey! Hope you can make it to my event." />
+                                <x-input-error class="mt-2" :messages="$errors->get('inviteMessage')" />
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="flex items-center justify-end gap-4 mt-6">
                         <x-secondary-button href="{{ route('dashboard') }}" wire:navigate>
                             {{ __('Cancel') }}
