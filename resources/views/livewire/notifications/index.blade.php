@@ -13,6 +13,22 @@
             @endif
         </div>
 
+        <!-- Tabs Section -->
+        <div class="flex gap-4 mb-8 border-b border-gray-200 dark:border-white/10">
+            <button wire:click="setTab('received')" class="pb-4 px-2 text-sm font-black uppercase tracking-widest transition-all relative {{ $activeTab === 'received' ? 'text-[#257bf4]' : 'text-gray-400 hover:text-gray-600 dark:hover:text-slate-300' }}">
+                Received
+                @if($activeTab === 'received')
+                    <div class="absolute bottom-0 left-0 w-full h-1 bg-[#257bf4] rounded-t-full"></div>
+                @endif
+            </button>
+            <button wire:click="setTab('sent')" class="pb-4 px-2 text-sm font-black uppercase tracking-widest transition-all relative {{ $activeTab === 'sent' ? 'text-[#257bf4]' : 'text-gray-400 hover:text-gray-600 dark:hover:text-slate-300' }}">
+                Sent
+                @if($activeTab === 'sent')
+                    <div class="absolute bottom-0 left-0 w-full h-1 bg-[#257bf4] rounded-t-full"></div>
+                @endif
+            </button>
+        </div>
+
         <!-- Notifications List -->
         <div class="flex flex-col gap-4">
             @forelse ($notifications as $notification)
@@ -25,7 +41,14 @@
                     
                     <div class="flex-grow">
                         <div class="flex justify-between items-start mb-1 gap-4">
-                            <h3 class="text-lg font-bold text-gray-900 dark:text-slate-100">{{ $notification->title }}</h3>
+                            <div>
+                                <h3 class="text-lg font-bold text-gray-900 dark:text-slate-100">{{ $notification->title }}</h3>
+                                @if($activeTab === 'sent')
+                                    <p class="text-[10px] font-black uppercase tracking-widest text-gray-400 mt-0.5">
+                                        Sent to: <span class="text-[#257bf4]">{{ $notification->user->name }}</span> ({{ $notification->user->email }})
+                                    </p>
+                                @endif
+                            </div>
                             <span class="text-[10px] font-bold text-gray-400 dark:text-slate-500 bg-gray-100 dark:bg-slate-800/50 px-2 py-1 rounded uppercase tracking-wider">
                                 {{ $notification->created_at?->diffForHumans() }}
                             </span>
@@ -35,20 +58,22 @@
                         </p>
                         
                         <div class="flex gap-3">
-                            @if($notification->type === 'invite' && $notification->invite?->status === 'pending')
-                                <button wire:click="acceptInvite({{ $notification->id }})" class="px-6 py-2 bg-[#257bf4] text-white text-xs font-bold rounded-lg hover:brightness-110 transition-all shadow-md shadow-[#257bf4]/10 flex items-center gap-2 uppercase tracking-wider">
-                                    <span class="material-symbols-outlined text-sm">check</span>
-                                    Accept
-                                </button>
-                                <button wire:click="declineInvite({{ $notification->id }})" class="px-6 py-2 bg-white/50 dark:bg-white/5 text-gray-700 dark:text-slate-300 text-xs font-bold rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 transition-all border border-gray-200 dark:border-white/10 uppercase tracking-wider">
-                                    Decline
-                                </button>
-                            @endif
+                            @if($activeTab === 'received')
+                                @if($notification->type === 'invite' && $notification->invite?->status === 'pending')
+                                    <button wire:click="acceptInvite({{ $notification->id }})" class="px-6 py-2 bg-[#257bf4] text-white text-xs font-bold rounded-lg hover:brightness-110 transition-all shadow-md shadow-[#257bf4]/10 flex items-center gap-2 uppercase tracking-wider">
+                                        <span class="material-symbols-outlined text-sm">check</span>
+                                        Accept
+                                    </button>
+                                    <button wire:click="declineInvite({{ $notification->id }})" class="px-6 py-2 bg-white/50 dark:bg-white/5 text-gray-700 dark:text-slate-300 text-xs font-bold rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 transition-all border border-gray-200 dark:border-white/10 uppercase tracking-wider">
+                                        Decline
+                                    </button>
+                                @endif
 
-                            @if(!$notification->read)
-                                <button wire:click="markAsRead({{ $notification->id }})" class="text-xs font-bold text-gray-400 dark:text-slate-500 hover:text-[#257bf4] transition-colors uppercase tracking-widest">
-                                    Mark as read
-                                </button>
+                                @if(!$notification->read)
+                                    <button wire:click="markAsRead({{ $notification->id }})" class="text-xs font-bold text-gray-400 dark:text-slate-500 hover:text-[#257bf4] transition-colors uppercase tracking-widest">
+                                        Mark as read
+                                    </button>
+                                @endif
                             @endif
                         </div>
                     </div>
@@ -56,10 +81,14 @@
             @empty
                 <div class="col-span-full py-20 bg-white/40 dark:bg-white/5 backdrop-blur-[12px] border-2 border-dashed border-gray-200 dark:border-white/10 rounded-xl flex flex-col items-center justify-center text-center">
                     <div class="w-20 h-20 rounded-full bg-gray-100 dark:bg-white/5 flex items-center justify-center mb-6">
-                        <span class="material-symbols-outlined text-gray-400 dark:text-slate-500 text-4xl">notifications_off</span>
+                        <span class="material-symbols-outlined text-gray-400 dark:text-slate-500 text-4xl">
+                            {{ $activeTab === 'sent' ? 'send' : 'notifications_off' }}
+                        </span>
                     </div>
-                    <h3 class="text-xl font-bold text-gray-900 dark:text-slate-100">All clear!</h3>
-                    <p class="text-gray-500 dark:text-slate-400 mt-2 max-w-xs">You don't have any new notifications at the moment.</p>
+                    <h3 class="text-xl font-bold text-gray-900 dark:text-slate-100">{{ $activeTab === 'sent' ? 'No sent notifications' : 'All clear!' }}</h3>
+                    <p class="text-gray-500 dark:text-slate-400 mt-2 max-w-xs">
+                        {{ $activeTab === 'sent' ? "You haven't sent any notifications through the system yet." : "You don't have any new notifications at the moment." }}
+                    </p>
                 </div>
             @endforelse
         </div>

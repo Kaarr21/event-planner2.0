@@ -8,6 +8,12 @@ use Illuminate\Support\Facades\Auth;
 
 class Index extends Component
 {
+    public $activeTab = 'received';
+
+    public function setTab($tab)
+    {
+        $this->activeTab = $tab;
+    }
     public function markAsRead($notificationId)
     {
         $notification = Notification::where('user_id', Auth::id())->find($notificationId);
@@ -33,6 +39,7 @@ class Index extends Component
                 // Notify Creator
                 \App\Models\Notification::create([
                     'user_id' => $invite->event->user_id,
+                    'sender_id' => Auth::id(),
                     'type' => 'invite_accepted',
                     'title' => 'Invitation Accepted',
                     'message' => Auth::user()->name . " has accepted the invitation to: " . $invite->event->title,
@@ -70,8 +77,12 @@ class Index extends Component
 
     public function render()
     {
+        $query = $this->activeTab === 'sent' 
+            ? Notification::where('sender_id', Auth::id())
+            : Notification::where('user_id', Auth::id());
+
         return view('livewire.notifications.index', [
-            'notifications' => Notification::where('user_id', Auth::id())->with('invite')->latest()->get(),
+            'notifications' => $query->with(['invite', 'user', 'sender'])->latest()->get(),
             'unreadCount' => Notification::where('user_id', Auth::id())->where('read', false)->count(),
         ])->layout('layouts.app');
     }

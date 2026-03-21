@@ -14,6 +14,43 @@ class Create extends Component
     public $location;
     public $inviteEmails;
     public $inviteMessage;
+    public $category_id;
+    public $newCategoryName;
+
+    public function getCategoriesProperty()
+    {
+        return \App\Models\Category::whereNull('user_id')
+            ->orWhere('user_id', Auth::id())
+            ->orderBy('name')
+            ->get();
+    }
+
+    public function openCategoryModal()
+    {
+        $this->dispatch('open-modal', 'custom-category');
+    }
+
+    public function closeCategoryModal()
+    {
+        $this->newCategoryName = '';
+        $this->resetErrorBag('newCategoryName');
+        $this->dispatch('close-modal', 'custom-category');
+    }
+
+    public function saveCustomCategory()
+    {
+        $this->validate([
+            'newCategoryName' => 'required|string|max:255|unique:categories,name',
+        ]);
+
+        $category = \App\Models\Category::create([
+            'name' => $this->newCategoryName,
+            'user_id' => Auth::id(),
+        ]);
+
+        $this->category_id = $category->id;
+        $this->closeCategoryModal();
+    }
 
     public function generateAIDescription(\App\Services\AIService $aiService)
     {
@@ -32,6 +69,7 @@ class Create extends Component
         'location' => 'nullable|string|max:255',
         'inviteEmails' => 'nullable|string',
         'inviteMessage' => 'nullable|string|max:500',
+        'category_id' => 'required|exists:categories,id',
     ];
 
     public function save()
@@ -45,6 +83,7 @@ class Create extends Component
             'location' => $this->location,
             'user_id' => Auth::id(),
             'status' => Event::STATUS_PUBLISHED, // Ensure it's published to send invites
+            'category_id' => $this->category_id,
         ]);
 
         if ($this->inviteEmails) {

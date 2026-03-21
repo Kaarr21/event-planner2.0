@@ -37,9 +37,7 @@
                 <div class="flex flex-col border-b border-gray-100 dark:border-gray-700 pb-4 last:border-0">
                     <div class="flex items-center justify-between mb-2">
                         <div class="flex items-center gap-3">
-                            <div class="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-xs">
-                                {{ substr($organizer->name, 0, 1) }}
-                            </div>
+                            <img src="{{ $organizer->profile_photo_url }}" class="h-10 w-10 rounded-full object-cover border border-gray-100 dark:border-white/10" alt="{{ $organizer->name }}">
                             <div>
                                 <span class="text-sm font-medium text-gray-900 dark:text-white">{{ $organizer->name }}</span>
                                 <p class="text-xs text-gray-500">{{ $organizer->email }}</p>

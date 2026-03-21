@@ -24,6 +24,19 @@ class Show extends Component
     public $userRole = null; // owner, organizer, guest, invited
     public $inviter = null;
     
+    // Edit event properties
+    public $isEditingEvent = false;
+    public $editTitle;
+    public $editDescription;
+    public $editDate;
+    public $editLocation;
+    public $notifyGuests = false;
+
+    // Notify Later properties
+    public $isNotifyingLater = false;
+    public $notifyLaterMessage = '';
+    public $notifyLaterFields = ['title', 'date', 'location'];
+
     // Add task properties
     public $newTaskTitle;
     public $newTaskDueDate;
@@ -144,6 +157,7 @@ class Show extends Component
             
             \App\Models\Notification::create([
                 'user_id' => $guest->id,
+                'sender_id' => Auth::id(),
                 'type' => 'location_shared',
                 'title' => 'Location Pin Shared',
                 'message' => Auth::user()->name . " shared the exact coordinates for " . $this->event->title,
@@ -163,7 +177,6 @@ class Show extends Component
             $organizer = $this->event->organizers()->where('user_id', $userId)->first();
             
             if (!$organizer) {
-                // If not an organizer, maybe they are a guest or have an invite?
                 $isGuest = $this->event->rsvps()
                     ->where('user_id', $userId)
                     ->whereIn('status', ['attending', 'maybe'])
@@ -174,11 +187,24 @@ class Show extends Component
                     return redirect()->route('events.index')->with('error', 'You do not have access to this event.');
                 }
                 
-                $this->userPermissions = ['view_tasks'];
-                $this->userRole = $isGuest ? 'guest' : 'invited';
-
-                if ($invite) {
-                    $this->inviter = $invite->inviter;
+                if ($isGuest) {
+                    $rsvp = $this->event->rsvps()->where('user_id', Auth::id())->first();
+                    $hasTask = \App\Models\Task::where('event_id', $this->event->id)->where('assigned_to', Auth::id())->exists();
+                    
+                    $this->userPermissions = [];
+                    if ($rsvp?->can_view_checklist || $hasTask) {
+                        $this->userPermissions[] = 'view_tasks';
+                    }
+                    if ($rsvp?->can_view_guests) {
+                        $this->userPermissions[] = 'view_guest_list';
+                    }
+                    $this->userRole = 'guest';
+                } else {
+                    $this->userPermissions = [];
+                    $this->userRole = 'invited';
+                    if ($invite) {
+                        $this->inviter = $invite->inviter;
+                    }
                 }
             } else {
                 $permissions = $organizer->pivot->permissions ?? [];
@@ -190,8 +216,23 @@ class Show extends Component
             }
         } else {
             // Owner has all permissions
-            $this->userPermissions = ['edit_event', 'manage_invites', 'manage_tasks', 'assign_tasks', 'manage_files', 'view_rsvps', 'owner'];
+            $this->userPermissions = ['edit_event', 'manage_invites', 'manage_tasks', 'assign_tasks', 'manage_files', 'view_rsvps', 'owner', 'view_tasks', 'view_guest_list'];
             $this->userRole = 'owner';
+        }
+    }
+
+    public function toggleGuestPermission($rsvpId, $permission)
+    {
+        if (!$this->hasPermission('owner') && !$this->hasPermission('edit_event')) {
+            return;
+        }
+
+        $rsvp = \App\Models\RSVP::find($rsvpId);
+        if ($rsvp && $rsvp->event_id === $this->event->id) {
+            $rsvp->update([
+                $permission => !$rsvp->$permission
+            ]);
+            session()->flash('permission_message', 'Guest permissions updated.');
         }
     }
 
@@ -719,6 +760,7 @@ class Show extends Component
             
             \App\Models\Notification::create([
                 'user_id' => $user->id,
+                'sender_id' => Auth::id(),
                 'type' => 'invite',
                 'title' => 'Event Invitation',
                 'message' => Auth::user()->name . " has invited you to: " . $this->event->title,
@@ -783,6 +825,17 @@ class Show extends Component
         foreach ($invites as $invite) {
             \Illuminate\Support\Facades\Mail::to($invite->invitee_email)
                 ->send(new \App\Mail\BulkEventNotificationMail($this->event, $this->bulkNotificationMessage));
+
+            if ($invite->invitee_id) {
+                \App\Models\Notification::create([
+                    'user_id' => $invite->invitee_id,
+                    'sender_id' => Auth::id(),
+                    'type' => 'info',
+                    'title' => 'Event Update',
+                    'message' => $this->bulkNotificationMessage,
+                    'related_id' => $this->event->id,
+                ]);
+            }
         }
 
         $count = $invites->count();
@@ -796,6 +849,138 @@ class Show extends Component
     {
         if (!$this->hasPermission('edit_event')) return abort(403);
         $this->isConfirmingCancellation = true;
+    }
+
+    public function startEditEvent()
+    {
+        if (!$this->hasPermission('edit_event')) return;
+
+        $this->editTitle = $this->event->title;
+        $this->editDescription = $this->event->description;
+        $this->editDate = $this->event->date->format('Y-m-d\TH:i');
+        $this->editLocation = $this->event->location;
+        $this->notifyGuests = false; // User requested that they choose to update
+        $this->isEditingEvent = true;
+    }
+
+    public function cancelEditEvent()
+    {
+        $this->isEditingEvent = false;
+        $this->reset(['editTitle', 'editDescription', 'editDate', 'editLocation', 'notifyGuests']);
+    }
+
+    public function updateEvent()
+    {
+        if (!$this->hasPermission('edit_event')) return;
+
+        $this->validate([
+            'editTitle' => 'required|string|max:255',
+            'editDescription' => 'nullable|string',
+            'editDate' => 'required|date|after_or_equal:now',
+            'editLocation' => 'nullable|string|max:255',
+        ]);
+
+        $oldData = [
+            'title' => $this->event->title,
+            'date' => $this->event->date->format('Y-m-d H:i'),
+            'location' => $this->event->location,
+        ];
+
+        $this->event->title = $this->editTitle;
+        $this->event->description = $this->editDescription;
+        $this->event->date = \Carbon\Carbon::parse($this->editDate);
+        $this->event->location = $this->editLocation;
+
+        $changes = [];
+        if ($this->event->isDirty('title')) $changes['title'] = ['old' => $oldData['title'], 'new' => $this->editTitle];
+        if ($this->event->isDirty('date')) $changes['date'] = ['old' => $oldData['date'], 'new' => \Carbon\Carbon::parse($this->editDate)->format('Y-m-d H:i')];
+        if ($this->event->isDirty('location')) $changes['location'] = ['old' => $oldData['location'] ?: 'None', 'new' => $this->editLocation ?: 'None'];
+
+        $this->event->save();
+
+        if ($this->notifyGuests && !empty($changes)) {
+            $this->notifyParticipantsOfUpdate($changes);
+        }
+
+        $this->isEditingEvent = false;
+        $this->event->refresh();
+        session()->flash('message', 'Event updated successfully.');
+    }
+
+    public function openNotifyLater()
+    {
+        if (!$this->hasPermission('edit_event')) return;
+        $this->isNotifyingLater = true;
+    }
+
+    public function closeNotifyLater()
+    {
+        $this->isNotifyingLater = false;
+        $this->reset(['notifyLaterMessage', 'notifyLaterFields']);
+    }
+
+    public function sendManualUpdate()
+    {
+        if (!$this->hasPermission('edit_event')) return;
+
+        $changes = [];
+        if (in_array('title', $this->notifyLaterFields)) {
+            $changes['title'] = ['old' => 'Previous Title', 'new' => $this->event->title];
+        }
+        if (in_array('date', $this->notifyLaterFields)) {
+            $changes['date'] = ['old' => 'Previous Date', 'new' => $this->event->date->format('Y-m-d H:i')];
+        }
+        if (in_array('location', $this->notifyLaterFields)) {
+            $changes['location'] = ['old' => 'Previous Location', 'new' => $this->event->location ?: 'None'];
+        }
+
+        if (empty($changes) && empty($this->notifyLaterMessage)) {
+            session()->flash('notification_error', 'Please select at least one change to notify or enter a message.');
+            return;
+        }
+
+        $this->notifyParticipantsOfUpdate($changes, $this->notifyLaterMessage);
+
+        $this->closeNotifyLater();
+        session()->flash('message', 'Notification sent to all guests and participants.');
+    }
+
+    protected function notifyParticipantsOfUpdate($changes, $customMessage = null)
+    {
+        $updatedBy = Auth::user();
+        
+        // 1. Get all invited users
+        $inviteesWithUser = $this->event->invites()->whereNotNull('invitee_id')->with('invitee')->get()->pluck('invitee');
+        $inviteesEmailOnly = $this->event->invites()->whereNull('invitee_id')->get();
+        
+        // 2. Get all RSVPs
+        $rsvpUsers = $this->event->rsvps()->with('user')->get()->pluck('user');
+        
+        // 3. Get all organizers
+        $organizers = $this->event->organizers()->get();
+
+        // Unique recipients
+        $recipients = collect()
+            ->merge($inviteesWithUser)
+            ->merge($rsvpUsers)
+            ->merge($organizers)
+            ->where('id', '!==', $updatedBy->id)
+            ->unique('id');
+
+        $notification = new \App\Notifications\EventUpdatedNotification($this->event, $changes, $updatedBy, $customMessage);
+        
+        // Send Notifications
+        foreach ($recipients as $recipient) {
+            $recipient->notify($notification);
+        }
+
+        // Handle email-only invitees
+        foreach ($inviteesEmailOnly as $invite) {
+            if ($invite->invitee_email) {
+                \Illuminate\Support\Facades\Mail::to($invite->invitee_email)
+                    ->send(new \App\Mail\EventUpdatedMail($this->event, $changes, $updatedBy, $customMessage));
+            }
+        }
     }
 
     public function cancelEvent()
@@ -880,6 +1065,7 @@ class Show extends Component
     {
         \App\Models\Notification::create([
             'user_id' => $userId,
+            'sender_id' => $cancelledBy->id,
             'type' => 'event_cancelled',
             'title' => 'Event Cancelled',
             'message' => "The event '{$event->title}' has been cancelled by {$cancelledBy->name}." . ($reason ? " Reason: {$reason}" : ""),
@@ -905,6 +1091,7 @@ class Show extends Component
                 if ($invite->invitee_id) {
                     \App\Models\Notification::create([
                         'user_id' => $invite->invitee_id,
+                        'sender_id' => Auth::id(),
                         'type' => 'invite',
                         'title' => 'Event Invitation',
                         'message' => Auth::user()->name . " has invited you to: " . $this->event->title,
@@ -931,6 +1118,7 @@ class Show extends Component
             if (!$exists) {
                 \App\Models\Notification::create([
                     'user_id' => $organizer->id,
+                    'sender_id' => Auth::id(),
                     'type' => 'info',
                     'title' => 'Organizer Role Assigned',
                     'message' => "You have been assigned as an organizer for: " . $this->event->title,

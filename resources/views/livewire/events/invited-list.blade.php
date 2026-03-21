@@ -30,8 +30,8 @@
                         <div class="flex flex-col">
                             <span class="text-sm font-bold text-gray-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">{{ $invite->invitee_email }}</span>
                             @if($invite->invitee_id)
-                                <div class="flex items-center gap-1.5 mt-0.5">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                                <div class="flex items-center gap-2 mt-1">
+                                    <img src="{{ $invite->invitee?->profile_photo_url }}" class="w-6 h-6 rounded-full object-cover border border-gray-100 dark:border-white/10" alt="{{ $invite->invitee?->name }}">
                                     <span class="text-[10px] text-green-600 dark:text-green-400 font-black uppercase tracking-widest">{{ $invite->invitee?->name ?? 'User Found' }}</span>
                                 </div>
                             @else

@@ -45,13 +45,16 @@
                 <div class="w-20 h-20 rounded-[2rem] bg-indigo-600 flex items-center justify-center border border-white/20 shadow-2xl shadow-indigo-500/40 transform -rotate-3 hover:rotate-0 transition-transform duration-500">
                     <span class="material-symbols-outlined text-4xl text-white">mail</span>
                 </div>
-                <div class="text-center md:text-left">
-                    <h3 class="text-3xl font-black text-gray-900 dark:text-white uppercase tracking-tighter leading-none">You're Invited!</h3>
-                    <p class="text-gray-500 dark:text-gray-400 mt-3 font-medium text-lg">
-                        <span class="text-indigo-500 font-black">{{ $inviter?->name ?? 'Someone' }}</span> 
-                        <span class="opacity-50 font-normal">({{ $inviter?->email ?? 'unknown' }})</span>
-                        has invited you to join this event team.
-                    </p>
+                <div class="flex items-center gap-3">
+                    <img src="{{ $inviter?->profile_photo_url }}" class="w-10 h-10 rounded-full object-cover border-2 border-white/20 shadow-lg" alt="{{ $inviter?->name }}">
+                    <div class="text-center md:text-left">
+                        <h3 class="text-3xl font-black text-gray-900 dark:text-white uppercase tracking-tighter leading-none">You're Invited!</h3>
+                        <p class="text-gray-500 dark:text-gray-400 mt-3 font-medium text-lg">
+                            <span class="text-indigo-500 font-black">{{ $inviter?->name ?? 'Someone' }}</span> 
+                            <span class="opacity-50 font-normal">({{ $inviter?->email ?? 'unknown' }})</span>
+                            has invited you to join this event team.
+                        </p>
+                    </div>
                 </div>
             </div>
             <div class="flex items-center gap-4 w-full md:w-auto">
@@ -73,10 +76,22 @@
                 @php
                     $tabs = [
                         ['id' => 'overview', 'label' => 'Overview', 'icon' => 'info'],
-                        ['id' => 'tasks', 'label' => 'Checklist', 'icon' => 'checklist'],
-                        ['id' => 'guests', 'label' => 'Guests', 'icon' => 'group'],
-                        ['id' => 'media', 'label' => 'Media', 'icon' => 'gallery_thumbnail'],
                     ];
+                    
+                    if ($this->hasPermission('view_tasks') || $this->hasPermission('manage_tasks') || $this->hasPermission('owner')) {
+                        $tabs[] = ['id' => 'tasks', 'label' => 'Checklist', 'icon' => 'checklist'];
+                    }
+
+                    if ($this->hasPermission('view_guest_list') || $this->hasPermission('manage_invites') || $this->hasPermission('owner')) {
+                        $tabs[] = ['id' => 'guests', 'label' => 'Guests', 'icon' => 'group'];
+                    }
+
+                    if ($this->hasPermission('owner') || $this->hasPermission('edit_event')) {
+                        $tabs[] = ['id' => 'budget', 'label' => 'Budget', 'icon' => 'payments'];
+                    }
+
+                    $tabs[] = ['id' => 'media', 'label' => 'Media', 'icon' => 'gallery_thumbnail'];
+
                     if ($this->hasPermission('manage_invites') || $this->hasPermission('owner')) {
                         $tabs[] = ['id' => 'team', 'label' => 'Team', 'icon' => 'shield_person'];
                     }
@@ -131,8 +146,20 @@
                         </div>
                     </div>
                     <div class="flex items-center gap-3 w-full md:w-auto">
+                        @if($this->hasPermission('edit_event'))
+                            <button wire:click="startEditEvent" class="flex-1 md:flex-none px-6 py-3 bg-white dark:bg-white/5 border border-emerald-200 dark:border-white/10 text-emerald-700 dark:text-emerald-400 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all">
+                                Edit Event Details
+                            </button>
+                            <button wire:click="openNotifyLater" class="flex-1 md:flex-none px-6 py-3 bg-indigo-50 dark:bg-indigo-900/10 border border-indigo-200 dark:border-indigo-500/20 text-indigo-700 dark:text-indigo-400 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all">
+                                Notify Guests
+                            </button>
+                        @endif
                         <button wire:click="sendInvitations" class="flex-1 md:flex-none px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-indigo-600/20">
                             Re-send Pending Invites
+                        </button>
+                        <button onclick="shareEvent('{{ addslashes($event->title) }}', '{{ url()->current() }}', '{{ addslashes(Str::limit($event->description, 100)) }}')" class="flex-1 md:flex-none px-6 py-3 bg-white dark:bg-white/5 border border-emerald-200 dark:border-white/10 text-emerald-700 dark:text-emerald-400 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all flex items-center justify-center gap-2">
+                            <span class="material-symbols-outlined text-sm">share</span>
+                            Share Event
                         </button>
                         <button wire:click="archiveEvent" class="flex-1 md:flex-none px-6 py-3 bg-white dark:bg-white/5 border border-emerald-200 dark:border-white/10 text-emerald-700 dark:text-emerald-400 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all">
                             Archive Event
@@ -200,8 +227,7 @@
                                 </p>
                                 
                                 @if($userRole !== 'invited')
-                                    <!-- Action Cards -->
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-12 pt-10 border-t border-gray-100 dark:border-white/5 no-print">
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12 pt-10 border-t border-gray-100 dark:border-white/5 no-print">
                                         <div class="flex items-center gap-5 group">
                                             <div class="w-14 h-14 rounded-2xl bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center text-indigo-600 group-hover:scale-110 transition-transform">
                                                 <span class="material-symbols-outlined text-2xl">calendar_month</span>
@@ -218,7 +244,16 @@
                                             </div>
                                             <div>
                                                 <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1.5">Where</p>
-                                                <p class="text-base font-bold text-gray-900 dark:text-white truncate max-w-[250px]">{{ $event->location ?: 'Online / TBD' }}</p>
+                                                <p class="text-base font-bold text-gray-900 dark:text-white truncate max-w-[200px]">{{ $event->location ?: 'Online / TBD' }}</p>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center gap-5 group">
+                                            <div class="w-14 h-14 rounded-2xl bg-amber-50 dark:bg-amber-900/20 flex items-center justify-center text-amber-600 group-hover:scale-110 transition-transform">
+                                                <span class="material-symbols-outlined text-2xl">category</span>
+                                            </div>
+                                            <div>
+                                                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1.5">Category</p>
+                                                <p class="text-base font-bold text-gray-900 dark:text-white">{{ $event->category?->name ?: 'Uncategorized' }}</p>
                                             </div>
                                         </div>
                                     </div>
@@ -329,7 +364,7 @@
             @endif
 
             <!-- Tasks Tab -->
-            @if($activeTab === 'tasks')
+            @if($activeTab === 'tasks' && ($this->hasPermission('view_tasks') || $this->hasPermission('manage_tasks') || $this->hasPermission('owner')))
                 <div class="max-w-4xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
                     <div class="bg-white dark:bg-[#1e293b]/50 dark:backdrop-blur-xl overflow-hidden shadow-sm sm:rounded-[2.5rem] border border-gray-100 dark:border-white/5">
                         <div class="p-8 md:p-12">
@@ -554,7 +589,7 @@
             @endif
 
             <!-- Guests Tab -->
-            @if($activeTab === 'guests')
+            @if($activeTab === 'guests' && ($this->hasPermission('view_guest_list') || $this->hasPermission('manage_invites') || $this->hasPermission('owner')))
                 <div class="max-w-4xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                         <div class="lg:col-span-2 space-y-8">
@@ -635,23 +670,40 @@
                                             RSVP Responses
                                         </h4>
                                         @forelse ($rsvps as $rsvp)
-                                            <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-white/5 rounded-2xl border border-transparent hover:border-gray-100 dark:hover:border-white/10 transition-all">
                                                 <div class="flex items-center gap-4">
-                                                    <div class="h-12 w-12 rounded-2xl bg-indigo-100 dark:bg-indigo-500/20 flex items-center justify-center text-indigo-700 dark:text-indigo-400 font-black text-lg">
-                                                        {{ substr($rsvp->user->name, 0, 1) }}
-                                                    </div>
+                                                    <img src="{{ $rsvp->user->profile_photo_url }}" class="h-12 w-12 rounded-2xl object-cover border border-gray-100 dark:border-white/10" alt="{{ $rsvp->user->name }}">
                                                     <div>
                                                         <p class="text-base font-bold text-gray-900 dark:text-white leading-none mb-1">{{ $rsvp->user->name }}</p>
                                                         <p class="text-xs text-gray-500 font-medium">{{ $rsvp->user->email }}</p>
                                                     </div>
                                                 </div>
-                                                <span class="text-[10px] px-2.5 py-1 rounded-lg font-black uppercase tracking-widest border
-                                                    {{ $rsvp->status === 'attending' ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : '' }}
-                                                    {{ $rsvp->status === 'maybe' ? 'bg-amber-100 text-amber-700 border-amber-200' : '' }}
-                                                    {{ $rsvp->status === 'declined' ? 'bg-rose-100 text-rose-700 border-rose-200' : '' }}
-                                                ">
-                                                    {{ $rsvp->status }}
-                                                </span>
+                                                
+                                                <div class="flex items-center gap-4">
+                                                    @if($this->hasPermission('owner') || $this->hasPermission('manage_invites'))
+                                                        <div class="flex items-center gap-2 mr-4 bg-white/50 dark:bg-white/5 p-1.5 rounded-xl border border-gray-100 dark:border-white/10">
+                                                            <button wire:click="toggleGuestPermission({{ $rsvp->id }}, 'can_view_guests')" 
+                                                                class="p-2 rounded-lg transition-all flex items-center gap-2 {{ $rsvp->can_view_guests ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20' : 'text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10' }}" 
+                                                                title="Toggle Guest List Access">
+                                                                <span class="material-symbols-outlined text-sm">group</span>
+                                                                <span class="text-[9px] font-black uppercase tracking-widest hidden sm:inline">Guests</span>
+                                                            </button>
+                                                            <button wire:click="toggleGuestPermission({{ $rsvp->id }}, 'can_view_checklist')" 
+                                                                class="p-2 rounded-lg transition-all flex items-center gap-2 {{ $rsvp->can_view_checklist ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20' : 'text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10' }}" 
+                                                                title="Toggle Checklist Access">
+                                                                <span class="material-symbols-outlined text-sm">checklist</span>
+                                                                <span class="text-[9px] font-black uppercase tracking-widest hidden sm:inline">Tasks</span>
+                                                            </button>
+                                                        </div>
+                                                    @endif
+                                                    
+                                                    <span class="text-[10px] px-2.5 py-1 rounded-lg font-black uppercase tracking-widest border
+                                                        {{ $rsvp->status === 'attending' ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : '' }}
+                                                        {{ $rsvp->status === 'maybe' ? 'bg-amber-100 text-amber-700 border-amber-200' : '' }}
+                                                        {{ $rsvp->status === 'declined' ? 'bg-rose-100 text-rose-700 border-rose-200' : '' }}
+                                                    ">
+                                                        {{ $rsvp->status }}
+                                                    </span>
+                                                </div>
                                             </div>
                                         @empty
                                             <div class="text-center py-12 bg-gray-50 dark:bg-white/5 rounded-[2rem] border border-dashed border-gray-200 dark:border-white/10">
@@ -704,10 +756,20 @@
                 </div>
             @endif
 
+            <!-- Budget Tab -->
+            @if($activeTab === 'budget')
+                <div class="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <livewire:events.budget-tracking :event="$event" :user-permissions="$userPermissions" :user-role="$userRole" />
+                </div>
+            @endif
+
             <!-- Team Tab (Owner/Organizers) -->
             @if($activeTab === 'team' && ($this->hasPermission('manage_invites') || $this->hasPermission('owner')))
-                <div class="max-w-4xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-12">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-12">
+                    <!-- Analytics Section -->
+                    <livewire:events.analytics-dashboard :event="$event" />
+
+                    <div class="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
                         @if($this->hasPermission('manage_invites'))
                             <div class="bg-white dark:bg-gray-800/50 dark:backdrop-blur-xl rounded-[2.5rem] p-8 border border-gray-100 dark:border-white/5 shadow-sm">
                                 <div class="flex items-center justify-between mb-8">
@@ -1110,6 +1172,153 @@
             </div>
         </div>
     @endif
+
+    <!-- Notify Later Modal -->
+    @if($isNotifyingLater)
+        <div class="fixed inset-0 z-[100] overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+            <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                <div class="fixed inset-0 bg-gray-500/75 dark:bg-gray-900/80 backdrop-blur-sm transition-opacity" aria-hidden="true" wire:click="closeNotifyLater"></div>
+
+                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+                <div class="relative inline-block align-middle bg-white dark:bg-[#1e293b] rounded-[2.5rem] text-left shadow-[0_40px_80px_-20px_rgba(0,0,0,0.2)] transform transition-all sm:my-8 sm:max-w-xl sm:w-full border border-gray-100 dark:border-white/5 overflow-hidden">
+                    <div class="p-8 border-b border-gray-100 dark:border-white/5 flex justify-between items-center">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-2xl bg-indigo-500/10 flex items-center justify-center text-indigo-500">
+                                <span class="material-symbols-outlined">campaign</span>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-black text-gray-900 dark:text-white tracking-tight uppercase">Notify Participants</h3>
+                                <p class="text-[10px] text-gray-500 uppercase tracking-widest font-black">Manual Update Broadcast</p>
+                            </div>
+                        </div>
+                        <button wire:click="closeNotifyLater" class="w-10 h-10 rounded-xl bg-gray-50 dark:bg-white/5 flex items-center justify-center text-gray-400 hover:text-gray-900 dark:hover:text-white transition-all">
+                            <span class="material-symbols-outlined">close</span>
+                        </button>
+                    </div>
+
+                    <div class="p-8 space-y-8">
+                        <div>
+                            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 ml-1">Select Details to Include</label>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                <label class="relative flex items-center gap-3 p-4 rounded-2xl border border-gray-100 dark:border-white/5 cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5 transition-all group">
+                                    <input type="checkbox" value="title" wire:model="notifyLaterFields" class="w-5 h-5 rounded-lg border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                                    <span class="text-xs font-bold text-gray-700 dark:text-gray-300">Event Title</span>
+                                </label>
+                                <label class="relative flex items-center gap-3 p-4 rounded-2xl border border-gray-100 dark:border-white/5 cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5 transition-all group">
+                                    <input type="checkbox" value="date" wire:model="notifyLaterFields" class="w-5 h-5 rounded-lg border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                                    <span class="text-xs font-bold text-gray-700 dark:text-gray-300">Date & Time</span>
+                                </label>
+                                <label class="relative flex items-center gap-3 p-4 rounded-2xl border border-gray-100 dark:border-white/5 cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5 transition-all group">
+                                    <input type="checkbox" value="location" wire:model="notifyLaterFields" class="w-5 h-5 rounded-lg border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                                    <span class="text-xs font-bold text-gray-700 dark:text-gray-300">Location</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="space-y-3">
+                            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Custom Message (Optional)</label>
+                            <textarea wire:model="notifyLaterMessage" rows="5" 
+                                    class="w-full bg-gray-50 dark:bg-white/5 border-0 ring-1 ring-gray-200 dark:ring-white/10 text-gray-900 dark:text-white text-sm rounded-2xl focus:ring-2 focus:ring-indigo-500 p-5 transition-all outline-none" 
+                                    placeholder="Write a personal note to your guests..."></textarea>
+                        </div>
+
+                        @if (session()->has('notification_error'))
+                            <div class="p-4 bg-rose-50 dark:bg-rose-900/10 border border-rose-100 dark:border-rose-500/20 rounded-2xl flex items-center gap-3 text-rose-600 dark:text-rose-400 text-xs font-bold">
+                                <span class="material-symbols-outlined text-sm">error</span>
+                                {{ session('notification_error') }}
+                            </div>
+                        @endif
+
+                        <div class="flex flex-col sm:flex-row-reverse gap-3 pt-4">
+                            <button wire:click="sendManualUpdate" 
+                                    class="w-full sm:w-auto px-10 py-5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black uppercase tracking-widest rounded-2xl shadow-xl shadow-indigo-600/30 transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2">
+                                <span class="material-symbols-outlined text-sm">send</span>
+                                Send Update Now
+                            </button>
+                            <button wire:click="closeNotifyLater" 
+                                    class="w-full sm:w-auto px-10 py-5 bg-gray-50 dark:bg-white/5 text-gray-500 dark:text-gray-400 text-xs font-black uppercase tracking-widest rounded-2xl hover:bg-gray-100 dark:hover:bg-white/10 transition-all">
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    <!-- Edit Event Modal -->
+    @if($isEditingEvent)
+        <div class="fixed inset-0 z-[100] overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+            <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                <div class="fixed inset-0 bg-gray-500/75 dark:bg-gray-900/80 backdrop-blur-sm transition-opacity" aria-hidden="true" wire:click="cancelEditEvent"></div>
+
+                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+                <div class="relative inline-block align-middle bg-white dark:bg-[#1e293b] rounded-[2.5rem] text-left shadow-[0_40px_80px_-20px_rgba(0,0,0,0.2)] transform transition-all sm:my-8 sm:max-w-2xl sm:w-full border border-gray-100 dark:border-white/5 overflow-hidden">
+                    <div class="p-8 border-b border-gray-100 dark:border-white/5 flex justify-between items-center">
+                        <h3 class="text-2xl font-black text-gray-900 dark:text-white tracking-tight uppercase">Edit Event Details</h3>
+                        <button wire:click="cancelEditEvent" class="w-10 h-10 rounded-xl bg-gray-50 dark:bg-white/5 flex items-center justify-center text-gray-400 hover:text-gray-900 dark:hover:text-white transition-all">
+                            <span class="material-symbols-outlined">close</span>
+                        </button>
+                    </div>
+
+                    <form wire:submit.prevent="updateEvent" class="p-8 space-y-6">
+                        <div class="space-y-2">
+                            <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Event Title</label>
+                            <input type="text" wire:model="editTitle" class="w-full bg-gray-50 dark:bg-white/5 border-0 ring-1 ring-gray-200 dark:ring-white/10 text-gray-900 dark:text-white text-sm rounded-2xl focus:ring-2 focus:ring-indigo-500 p-4 transition-all" placeholder="Enter event title">
+                            @error('editTitle') <span class="text-[10px] text-rose-500 font-bold uppercase ml-1">{{ $message }}</span> @enderror
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Description</label>
+                            <textarea wire:model="editDescription" rows="4" class="w-full bg-gray-50 dark:bg-white/5 border-0 ring-1 ring-gray-200 dark:ring-white/10 text-gray-900 dark:text-white text-sm rounded-2xl focus:ring-2 focus:ring-indigo-500 p-4 transition-all" placeholder="Describe your event..."></textarea>
+                            @error('editDescription') <span class="text-[10px] text-rose-500 font-bold uppercase ml-1">{{ $message }}</span> @enderror
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="space-y-2">
+                                <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Date & Time</label>
+                                <input type="datetime-local" wire:model="editDate" class="w-full bg-gray-50 dark:bg-white/5 border-0 ring-1 ring-gray-200 dark:ring-white/10 text-gray-900 dark:text-white text-sm rounded-2xl focus:ring-2 focus:ring-indigo-500 p-4 transition-all">
+                                @error('editDate') <span class="text-[10px] text-rose-500 font-bold uppercase ml-1">{{ $message }}</span> @enderror
+                            </div>
+
+                            <div class="space-y-2">
+                                <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Location</label>
+                                <input type="text" wire:model="editLocation" class="w-full bg-gray-50 dark:bg-white/5 border-0 ring-1 ring-gray-200 dark:ring-white/10 text-gray-900 dark:text-white text-sm rounded-2xl focus:ring-2 focus:ring-indigo-500 p-4 transition-all" placeholder="e.g. Online, City, or Venue">
+                                @error('editLocation') <span class="text-[10px] text-rose-500 font-bold uppercase ml-1">{{ $message }}</span> @enderror
+                            </div>
+                        </div>
+
+                        <div class="p-6 bg-indigo-50 dark:bg-indigo-900/10 rounded-3xl border border-indigo-100 dark:border-indigo-500/10 flex items-center justify-between">
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 rounded-2xl bg-indigo-500/20 flex items-center justify-center text-indigo-500">
+                                    <span class="material-symbols-outlined">campaign</span>
+                                </div>
+                                <div>
+                                    <h4 class="text-xs font-black text-indigo-900 dark:text-indigo-300 uppercase tracking-widest">Notify Participants?</h4>
+                                    <p class="text-[10px] text-indigo-700/60 dark:text-indigo-400/60">Email and push notification for Title, Date, or Location changes.</p>
+                                </div>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" wire:model="notifyGuests" class="sr-only peer">
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-600"></div>
+                            </label>
+                        </div>
+
+                        <div class="flex flex-col sm:flex-row-reverse gap-3 pt-6 border-t border-gray-100 dark:border-white/5">
+                            <button type="submit" class="w-full sm:w-auto px-10 py-4 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black uppercase tracking-widest rounded-2xl shadow-xl shadow-indigo-500/20 transition-all active:scale-95">
+                                Save Changes
+                            </button>
+                            <button type="button" wire:click="cancelEditEvent" class="w-full sm:w-auto px-10 py-4 bg-gray-50 dark:bg-white/5 text-gray-500 dark:text-gray-400 text-xs font-black uppercase tracking-widest rounded-2xl transition-all">
+                                Cancel
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    @endif
     </div>
 </div>
 
@@ -1229,6 +1438,30 @@
         }
     }
 
+    async function shareEvent(title, url, description) {
+        const shareData = {
+            title: title,
+            text: description + '\n\nCheck out this event at:',
+            url: url
+        };
+
+        try {
+            if (navigator.share && navigator.canShare(shareData)) {
+                await navigator.share(shareData);
+            } else {
+                navigator.clipboard.writeText(url).then(() => {
+                    alert('Event link copied to clipboard! You can now share it manually.');
+                }).catch(err => {
+                    console.error('Copy failed:', err);
+                });
+            }
+        } catch (err) {
+            if (err.name !== 'AbortError') {
+                console.error('Share failed:', err);
+            }
+        }
+    }
+
     function copyToClipboard(text) {
         navigator.clipboard.writeText(text).then(() => {
             alert('Location link copied to clipboard! You can now paste it in any app.');
@@ -1243,5 +1476,6 @@
         });
     }
 </script>
-<script src="https://maps.googleapis.com/maps/api/js?key={{ config('services.google.maps_api_key') }}&libraries=places&callback=initMap" async defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key={{ config('services.google.maps_api_key') }}&libraries=places&callback=initMap" async defer></script>
 @endpush

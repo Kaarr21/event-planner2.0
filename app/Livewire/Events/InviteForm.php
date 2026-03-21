@@ -66,6 +66,7 @@ class InviteForm extends Component
             if ($invitee) {
                 Notification::create([
                     'user_id' => $invitee->id,
+                    'sender_id' => Auth::id(),
                     'type' => 'invite',
                     'title' => 'Event Invitation',
                     'message' => Auth::user()->name . " has invited you to: " . $this->event->title,

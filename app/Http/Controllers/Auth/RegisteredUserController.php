@@ -53,6 +53,7 @@ class RegisteredUserController extends Controller
 
             \App\Models\Notification::create([
                 'user_id' => $user->id,
+                'sender_id' => $invite->inviter_id,
                 'type' => 'invite',
                 'title' => 'New Event Invitation',
                 'message' => ($invite->inviter->name ?? 'Someone') . " has invited you to: " . $invite->event->title,

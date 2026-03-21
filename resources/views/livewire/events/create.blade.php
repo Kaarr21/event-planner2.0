@@ -9,6 +9,24 @@
         <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
             <div class="p-6 text-gray-900 dark:text-gray-100">
                 <form wire:submit.prevent="save" class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <x-input-label for="category_id" :value="__('Event Category')" />
+                            <div class="flex items-center gap-2 mt-1">
+                                <select wire:model="category_id" id="category_id" name="category_id" class="block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm" required>
+                                    <option value="">Select a category</option>
+                                    @foreach($this->categories as $category)
+                                        <option value="{{ $category->id }}">{{ $category->name }}</option>
+                                    @endforeach
+                                </select>
+                                <button type="button" wire:click="openCategoryModal" class="p-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 flex items-center justify-center h-10 w-10">
+                                    <span class="material-symbols-outlined">add</span>
+                                </button>
+                            </div>
+                            <x-input-error class="mt-2" :messages="$errors->get('category_id')" />
+                        </div>
+                    </div>
+
                     <div>
                         <x-input-label for="title" :value="__('Event Title')" />
                         <x-text-input wire:model="title" id="title" name="title" type="text" class="mt-1 block w-full" required autofocus />
@@ -78,4 +96,39 @@
             </div>
         </div>
     </div>
+
+    <x-modal name="custom-category" focusable>
+        <div class="p-6">
+            <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100">
+                {{ __('Add Custom Category') }}
+            </h2>
+
+            <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                {{ __('Enter the name of the new category you want to add.') }}
+            </p>
+
+            <div class="mt-6">
+                <x-input-label for="newCategoryName" value="{{ __('Category Name') }}" class="sr-only" />
+                <x-text-input
+                    wire:model="newCategoryName"
+                    id="newCategoryName"
+                    name="newCategoryName"
+                    type="text"
+                    class="mt-1 block w-full"
+                    placeholder="{{ __('Category Name') }}"
+                />
+                <x-input-error :messages="$errors->get('newCategoryName')" class="mt-2" />
+            </div>
+
+            <div class="mt-6 flex justify-end">
+                <x-secondary-button wire:click="closeCategoryModal">
+                    {{ __('Cancel') }}
+                </x-secondary-button>
+
+                <x-primary-button class="ms-3" wire:click="saveCustomCategory">
+                    {{ __('Save Category') }}
+                </x-primary-button>
+            </div>
+        </div>
+    </x-modal>
 </div>

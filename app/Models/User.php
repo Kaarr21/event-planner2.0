@@ -6,6 +6,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage;
 
 class User extends Authenticatable
 {
@@ -23,7 +24,34 @@ class User extends Authenticatable
         'password',
         'two_factor_code',
         'two_factor_expires_at',
+        'profile_photo_path',
     ];
+
+    /**
+     * Get the URL to the user's profile photo.
+     *
+     * @return string
+     */
+    public function getProfilePhotoUrlAttribute()
+    {
+        return $this->profile_photo_path
+                    ? \Illuminate\Support\Facades\Storage::url($this->profile_photo_path)
+                    : $this->defaultProfilePhotoUrl();
+    }
+
+    /**
+     * Get the default profile photo URL if no photo has been uploaded.
+     *
+     * @return string
+     */
+    protected function defaultProfilePhotoUrl()
+    {
+        $name = trim(collect(explode(' ', $this->name))->map(function ($segment) {
+            return mb_substr($segment, 0, 1);
+        })->join(' '));
+
+        return 'https://ui-avatars.com/api/?name='.urlencode($name).'&color=7F9CF5&background=EBF4FF';
+    }
 
     /**
      * The attributes that should be hidden for serialization.
@@ -97,5 +125,13 @@ class User extends Authenticatable
             ->using(EventOrganizer::class)
             ->withPivot('permissions')
             ->withTimestamps();
+    }
+
+    /**
+     * Get the custom categories created by the user.
+     */
+    public function categories()
+    {
+        return $this->hasMany(Category::class);
     }
 }

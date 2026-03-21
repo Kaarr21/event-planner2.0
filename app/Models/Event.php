@@ -25,6 +25,7 @@ class Event extends Model
         'google_place_id',
         'status',
         'cancellation_reason',
+        'category_id',
     ];
 
     protected $casts = [
@@ -32,6 +33,14 @@ class Event extends Model
         'date' => 'datetime',
         'status' => 'string',
     ];
+
+    /**
+     * Get the category for the event.
+     */
+    public function category()
+    {
+        return $this->belongsTo(Category::class);
+    }
 
     /**
      * Get the user who created the event.
@@ -90,6 +99,14 @@ class Event extends Model
     public function media()
     {
         return $this->hasMany(EventMedia::class);
+    }
+
+    /**
+     * Get the budget items for the event.
+     */
+    public function budgets()
+    {
+        return $this->hasMany(Budget::class);
     }
 
     /**

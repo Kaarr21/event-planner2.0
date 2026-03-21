@@ -58,6 +58,7 @@ class ManageOrganizers extends Component
         if ($this->event->status === Event::STATUS_PUBLISHED) {
             Notification::create([
                 'user_id' => $user->id,
+                'sender_id' => \Illuminate\Support\Facades\Auth::id(),
                 'type' => 'info',
                 'title' => 'Organizer Role Assigned',
                 'message' => "You have been assigned as an organizer for: " . $this->event->title,

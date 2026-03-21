@@ -13,6 +13,8 @@ class RSVP extends Model
         'event_id',
         'status',
         'message',
+        'can_view_guests',
+        'can_view_checklist',
     ];
 
     /**
