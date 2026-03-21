@@ -22,7 +22,7 @@ new class extends Component {
     }
 }; ?>
 
-<nav x-data="{ open: false }" class="bg-white dark:bg-[#1e293b] border-b border-gray-100 dark:border-white/10">
+<nav x-data="{ open: false }" class="bg-white/90 dark:bg-brand-dark/60 backdrop-blur-2xl border-b border-gray-100 dark:border-white/5 sticky top-0 z-40">
     <!-- Primary Navigation Menu -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">

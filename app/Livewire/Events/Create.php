@@ -86,6 +86,10 @@ class Create extends Component
             'category_id' => $this->category_id,
         ]);
 
+        // Assign Spatie Role
+        setPermissionsTeamId($event->id);
+        Auth::user()->assignRole('owner');
+
         if ($this->inviteEmails) {
             $emails = array_map('trim', explode(',', str_replace(["\n", "\r"], ',', $this->inviteEmails)));
             $emails = array_filter($emails, fn($email) => filter_var($email, FILTER_VALIDATE_EMAIL));

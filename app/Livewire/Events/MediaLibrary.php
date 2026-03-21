@@ -47,7 +47,11 @@ class MediaLibrary extends Component
 
     public function hasPermission($permission)
     {
-        return in_array($permission, $this->userPermissions) || in_array('owner', $this->userPermissions);
+        $user = Auth::user();
+        if (!$user) return false;
+
+        setPermissionsTeamId($this->event->id);
+        return $user->hasRole('owner') || $user->hasPermissionTo($permission);
     }
 
     public function updatedUploads()
@@ -88,7 +92,7 @@ class MediaLibrary extends Component
         $media = EventMedia::findOrFail($mediaId);
         
         // Only owner, uploader or manager can delete
-        if ($media->user_id === Auth::id() || $this->userRole === 'owner' || $this->hasPermission('manage_files')) {
+        if ($media->user_id === Auth::id() || Auth::user()->hasRole('owner') || $this->hasPermission('manage_files')) {
             Storage::disk('public')->delete($media->file_path);
             $media->delete();
             $this->event->refresh();

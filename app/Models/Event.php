@@ -5,9 +5,22 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+use Illuminate\Database\Eloquent\SoftDeletes;
+
 class Event extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
+
+    protected static function booted()
+    {
+        static::deleting(function ($event) {
+            $event->tasks()->delete();
+            $event->budgets()->delete();
+            $event->invites()->delete();
+            $event->rsvps()->delete();
+            $event->media()->delete();
+        });
+    }
     const STATUS_DRAFT = 'draft';
     const STATUS_PUBLISHED = 'published';
     const STATUS_ARCHIVED = 'archived';

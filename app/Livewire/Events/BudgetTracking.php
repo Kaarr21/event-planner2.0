@@ -50,7 +50,12 @@ class BudgetTracking extends Component
         if ($this->event->status === Event::STATUS_CANCELLED && $permission !== 'view') {
             return false;
         }
-        return in_array($permission, $this->userPermissions) || in_array('owner', $this->userPermissions);
+
+        $user = Auth::user();
+        if (!$user) return false;
+
+        setPermissionsTeamId($this->event->id);
+        return $user->hasRole('owner') || $user->hasPermissionTo($permission);
     }
 
     public function saveBudgetItem()

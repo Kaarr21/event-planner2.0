@@ -30,6 +30,9 @@ class Show extends Component
     public $editDescription;
     public $editDate;
     public $editLocation;
+    public $editCategoryId;
+    public $newCategoryName;
+
     public $notifyGuests = false;
 
     // Notify Later properties
@@ -107,6 +110,41 @@ class Show extends Component
         'bulkNotificationMessage' => 'required|string|max:5000',
     ];
 
+    public function getCategoriesProperty()
+    {
+        return \App\Models\Category::whereNull('user_id')
+            ->orWhere('user_id', Auth::id())
+            ->orderBy('name')
+            ->get();
+    }
+
+    public function openCategoryModal()
+    {
+        $this->dispatch('open-modal', 'custom-category');
+    }
+
+    public function closeCategoryModal()
+    {
+        $this->newCategoryName = '';
+        $this->resetErrorBag('newCategoryName');
+        $this->dispatch('close-modal', 'custom-category');
+    }
+
+    public function saveCustomCategory()
+    {
+        $this->validate([
+            'newCategoryName' => 'required|string|max:255|unique:categories,name',
+        ]);
+
+        $category = \App\Models\Category::create([
+            'name' => $this->newCategoryName,
+            'user_id' => Auth::id(),
+        ]);
+
+        $this->editCategoryId = $category->id;
+        $this->closeCategoryModal();
+    }
+
     public function mount(Event $event)
     {
         $this->event = $event;
@@ -114,6 +152,10 @@ class Show extends Component
         $this->longitude = $event->longitude;
         $this->googlePlaceId = $event->google_place_id;
         $this->locationSearch = $event->location;
+        
+        // Set Spatie Team context
+        setPermissionsTeamId($event->id);
+        
         $this->authorizeUser();
     }
 
@@ -170,54 +212,38 @@ class Show extends Component
 
     protected function authorizeUser()
     {
-        $userId = Auth::id();
+        $user = Auth::user();
+        if (!$user) return redirect()->route('login');
+
+        // Set Spatie context
+        setPermissionsTeamId($this->event->id);
         
-        // Authorization check
-        if ($this->event->user_id !== $userId) {
-            $organizer = $this->event->organizers()->where('user_id', $userId)->first();
-            
-            if (!$organizer) {
-                $isGuest = $this->event->rsvps()
-                    ->where('user_id', $userId)
-                    ->whereIn('status', ['attending', 'maybe'])
-                    ->exists();
-                $invite = $this->event->invites()->where('invitee_id', $userId)->where('status', 'pending')->first();
-                
-                if (!$isGuest && !$invite) {
-                    return redirect()->route('events.index')->with('error', 'You do not have access to this event.');
-                }
-                
-                if ($isGuest) {
-                    $rsvp = $this->event->rsvps()->where('user_id', Auth::id())->first();
-                    $hasTask = \App\Models\Task::where('event_id', $this->event->id)->where('assigned_to', Auth::id())->exists();
-                    
-                    $this->userPermissions = [];
-                    if ($rsvp?->can_view_checklist || $hasTask) {
-                        $this->userPermissions[] = 'view_tasks';
-                    }
-                    if ($rsvp?->can_view_guests) {
-                        $this->userPermissions[] = 'view_guest_list';
-                    }
-                    $this->userRole = 'guest';
-                } else {
-                    $this->userPermissions = [];
-                    $this->userRole = 'invited';
-                    if ($invite) {
-                        $this->inviter = $invite->inviter;
-                    }
-                }
-            } else {
-                $permissions = $organizer->pivot->permissions ?? [];
-                if (!is_array($permissions)) {
-                    $permissions = json_decode($permissions, true) ?? [];
-                }
-                $this->userPermissions = $permissions;
-                $this->userRole = 'organizer';
-            }
-        } else {
-            // Owner has all permissions
-            $this->userPermissions = ['edit_event', 'manage_invites', 'manage_tasks', 'assign_tasks', 'manage_files', 'view_rsvps', 'owner', 'view_tasks', 'view_guest_list'];
+        // Check for access to the event
+        $isOrganizer = $user->hasRole('organizer');
+        $isOwner = $user->hasRole('owner');
+        $isGuest = $user->hasRole('guest');
+        $invite = $this->event->invites()->where('invitee_id', $user->id)->where('status', 'pending')->first();
+        
+        if (!$isOrganizer && !$isOwner && !$isGuest && !$invite) {
+             return redirect()->route('events.index')->with('error', 'You do not have access to this event.');
+        }
+
+        // Determine user role and permissions for the view
+        if ($isOwner) {
             $this->userRole = 'owner';
+            $this->userPermissions = $user->getAllPermissions()->pluck('name')->toArray();
+        } elseif ($isOrganizer) {
+            $this->userRole = 'organizer';
+            $this->userPermissions = $user->getPermissionNames()->toArray();
+        } elseif ($isGuest) {
+            $this->userRole = 'guest';
+            $this->userPermissions = $user->getPermissionNames()->toArray();
+        } else {
+            $this->userRole = 'invited';
+            $this->userPermissions = [];
+            if ($invite) {
+                $this->inviter = $invite->inviter;
+            }
         }
     }
 
@@ -227,28 +253,53 @@ class Show extends Component
             return;
         }
 
-        $rsvp = \App\Models\RSVP::find($rsvpId);
-        if ($rsvp && $rsvp->event_id === $this->event->id) {
+        $rsvp = \App\Models\RSVP::with('user')->find($rsvpId);
+        if ($rsvp && $rsvp->event_id === $this->event->id && $rsvp->user) {
+            setPermissionsTeamId($this->event->id);
+            
+            // Map view_tasks and view_guest_list
+            $spatiePermission = ($permission === 'can_view_checklist') ? 'view_tasks' : 'view_guest_list';
+            
+            if ($rsvp->user->hasPermissionTo($spatiePermission)) {
+                $rsvp->user->revokePermissionTo($spatiePermission);
+            } else {
+                $rsvp->user->givePermissionTo($spatiePermission);
+            }
+
+            // Sync with old columns for compatibility
             $rsvp->update([
                 $permission => !$rsvp->$permission
             ]);
+
+            $this->authorizeUser();
             session()->flash('permission_message', 'Guest permissions updated.');
         }
     }
 
     public function hasPermission($permission)
     {
-        // If event is cancelled, only allow 'view' and 'owner' (for restoring maybe, but user said "no further actions can be performed").
-        // I'll block everything except 'view' if cancelled.
-        if ($this->event->status === Event::STATUS_CANCELLED && $permission !== 'view') {
+        // If event is cancelled, only allow 'view' and 'owner'.
+        if ($this->event->status === Event::STATUS_CANCELLED && !in_array($permission, ['view', 'owner'])) {
             return false;
         }
 
-        $perms = $this->userPermissions ?: [];
-        if (!is_array($perms)) {
-            $perms = [];
+        if ($permission === 'view') return true;
+
+        $user = Auth::user();
+        if (!$user) return false;
+
+        // The owner of the event (or user with 'owner' role in teams context) always has full access.
+        if ($this->event->user_id === $user->id) return true;
+
+        setPermissionsTeamId($this->event->id);
+        
+        // If they specifically asked for 'owner' permission (checking role in context)
+        if ($permission === 'owner') {
+            return $user->hasRole('owner');
         }
-        return in_array($permission, $perms) || in_array('owner', $perms);
+
+        // Return true if they are an owner OR have the specific permission.
+        return $user->hasRole('owner') || $user->hasPermissionTo($permission);
     }
 
     public function suggestAITasks(\App\Services\AIService $aiService)
@@ -408,6 +459,15 @@ class Show extends Component
             ]);
 
         $this->event->refresh();
+
+        // Spatie Role Assignment
+        setPermissionsTeamId($this->event->id);
+        if ($status === 'attending' || $status === 'maybe') {
+            Auth::user()->assignRole('guest');
+        } elseif ($status === 'declined') {
+            Auth::user()->removeRole('guest');
+        }
+
         $this->authorizeUser(); // Update permissions and role instantly
         session()->flash('rsvp_message', 'RSVP updated.');
     }
@@ -859,6 +919,7 @@ class Show extends Component
         $this->editDescription = $this->event->description;
         $this->editDate = $this->event->date->format('Y-m-d\TH:i');
         $this->editLocation = $this->event->location;
+        $this->editCategoryId = $this->event->category_id;
         $this->notifyGuests = false; // User requested that they choose to update
         $this->isEditingEvent = true;
     }
@@ -878,6 +939,7 @@ class Show extends Component
             'editDescription' => 'nullable|string',
             'editDate' => 'required|date|after_or_equal:now',
             'editLocation' => 'nullable|string|max:255',
+            'editCategoryId' => 'required|exists:categories,id',
         ]);
 
         $oldData = [
@@ -890,6 +952,7 @@ class Show extends Component
         $this->event->description = $this->editDescription;
         $this->event->date = \Carbon\Carbon::parse($this->editDate);
         $this->event->location = $this->editLocation;
+        $this->event->category_id = $this->editCategoryId;
 
         $changes = [];
         if ($this->event->isDirty('title')) $changes['title'] = ['old' => $oldData['title'], 'new' => $this->editTitle];

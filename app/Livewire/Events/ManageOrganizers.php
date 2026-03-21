@@ -55,6 +55,11 @@ class ManageOrganizers extends Component
             'permissions' => $this->selectedPermissions,
         ]);
 
+        // Spatie Role Assignment
+        setPermissionsTeamId($this->event->id);
+        $user->assignRole('organizer');
+        $user->givePermissionTo($this->selectedPermissions);
+
         if ($this->event->status === Event::STATUS_PUBLISHED) {
             Notification::create([
                 'user_id' => $user->id,
@@ -72,14 +77,31 @@ class ManageOrganizers extends Component
 
     public function removeOrganizer($userId)
     {
+        $user = User::find($userId);
+        if ($user) {
+            setPermissionsTeamId($this->event->id);
+            $user->removeRole('organizer');
+            $user->revokePermissionTo($user->getPermissionNames());
+        }
+
         $this->event->organizers()->detach($userId);
         session()->flash('organizer_message', 'Organizer removed.');
     }
 
     public function togglePermission($userId, $permission)
     {
+        $user = User::find($userId);
         $organizer = $this->event->organizers()->where('user_id', $userId)->first();
-        if ($organizer) {
+        if ($user && $organizer) {
+            setPermissionsTeamId($this->event->id);
+            
+            if ($user->hasPermissionTo($permission)) {
+                $user->revokePermissionTo($permission);
+            } else {
+                $user->givePermissionTo($permission);
+            }
+
+            // Sync with old pivot for compatibility
             $permissions = $organizer->pivot->permissions ?? [];
             if (!is_array($permissions)) {
                 $permissions = json_decode($permissions, true) ?? [];

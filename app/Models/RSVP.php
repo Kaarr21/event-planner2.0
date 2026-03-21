@@ -4,8 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
+use Illuminate\Database\Eloquent\SoftDeletes;
+
 class RSVP extends Model
 {
+    use SoftDeletes;
     protected $table = 'rsvps';
 
     protected $fillable = [
