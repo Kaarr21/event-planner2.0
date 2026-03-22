@@ -13,6 +13,8 @@ class Order extends Model
         'user_id',
         'event_id',
         'total_amount',
+        'ticket_count',
+        'currency',
         'status',
         'payment_method',
         'payment_reference',
@@ -37,6 +39,14 @@ class Order extends Model
     public function event()
     {
         return $this->belongsTo(Event::class);
+    }
+
+    /**
+     * Get the items in this order.
+     */
+    public function items()
+    {
+        return $this->hasMany(OrderItem::class);
     }
 
     /**
