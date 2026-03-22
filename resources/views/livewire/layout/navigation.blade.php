@@ -18,6 +18,7 @@ new class extends Component {
     {
         return [
             'hasCancelledEvents' => \App\Models\Event::cancelledForUser(auth()->id())->exists(),
+            'hasOrganizations' => auth()->user()->organizations()->exists(),
         ];
     }
 }; ?>
@@ -48,6 +49,12 @@ new class extends Component {
                         <x-nav-link :href="route('events.cancelled')" :active="request()->routeIs('events.cancelled')"
                             wire:navigate>
                             {{ __('Cancelled') }}
+                        </x-nav-link>
+                    @endif
+
+                    @if($hasOrganizations)
+                        <x-nav-link href="/org-admin" :active="request()->is('org-admin*')">
+                            {{ __('Org Dashboard') }}
                         </x-nav-link>
                     @endif
 
@@ -165,6 +172,12 @@ new class extends Component {
                 <x-responsive-nav-link :href="route('events.cancelled')" :active="request()->routeIs('events.cancelled')"
                     wire:navigate>
                     {{ __('Cancelled') }}
+                </x-responsive-nav-link>
+            @endif
+
+            @if($hasOrganizations)
+                <x-responsive-nav-link href="/org-admin" :active="request()->is('org-admin*')">
+                    {{ __('Org Dashboard') }}
                 </x-responsive-nav-link>
             @endif
 

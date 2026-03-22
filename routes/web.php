@@ -22,4 +22,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/notifications', \App\Livewire\Notifications\Index::class)->name('notifications.index');
 });
 
+Route::get('/orgs/{organization:slug}', [\App\Http\Controllers\OrganizationController::class, 'show'])->name('organizations.show');
+
 require __DIR__.'/auth.php';

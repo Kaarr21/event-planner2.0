@@ -38,6 +38,7 @@ class Event extends Model
         'google_place_id',
         'status',
         'cancellation_reason',
+        'organization_id',
         'category_id',
     ];
 
@@ -61,6 +62,14 @@ class Event extends Model
     public function creator()
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    /**
+     * Get the organization that owns the event.
+     */
+    public function organization()
+    {
+        return $this->belongsTo(Organization::class);
     }
 
     /**

@@ -35,6 +35,10 @@ class RegisteredUserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'account_type' => ['required', 'string', 'in:individual,organization'],
+            'organization_name' => ['required_if:account_type,organization', 'string', 'max:255', 'nullable'],
+            'organization_type' => ['required_if:account_type,organization', 'string', 'max:255', 'nullable'],
+            'organization_website' => ['nullable', 'string', 'url', 'max:255'],
         ]);
 
         $user = User::create([
@@ -42,6 +46,19 @@ class RegisteredUserController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password),
         ]);
+
+        if ($request->account_type === 'organization') {
+            $slug = \Illuminate\Support\Str::slug($request->organization_name) . '-' . uniqid();
+            
+            $organization = \App\Models\Organization::create([
+                'name' => $request->organization_name,
+                'type' => $request->organization_type,
+                'slug' => $slug,
+                'website_url' => $request->organization_website,
+            ]);
+
+            $organization->members()->attach($user->id, ['role' => 'owner']);
+        }
 
         // Process pending invitations for this email
         $pendingInvites = \App\Models\Invite::where('invitee_email', $user->email)

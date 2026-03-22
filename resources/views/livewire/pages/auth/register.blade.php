@@ -13,6 +13,11 @@ new #[Layout('layouts.public')] class extends Component {
     public string $email = '';
     public string $password = '';
     public string $password_confirmation = '';
+    
+    public string $account_type = 'individual';
+    public string $organization_name = '';
+    public string $organization_type = '';
+    public string $organization_website = '';
 
     /**
      * Handle an incoming registration request.
@@ -23,11 +28,32 @@ new #[Layout('layouts.public')] class extends Component {
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:' . User::class],
             'password' => ['required', 'string', 'confirmed', Rules\Password::defaults()],
+            'account_type' => ['required', 'string', 'in:individual,organization'],
+            'organization_name' => ['required_if:account_type,organization', 'string', 'max:255', 'nullable'],
+            'organization_type' => ['required_if:account_type,organization', 'string', 'max:255', 'nullable'],
+            'organization_website' => ['nullable', 'string', 'url', 'max:255'],
         ]);
 
-        $validated['password'] = Hash::make($validated['password']);
+        $user = User::create([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'password' => Hash::make($validated['password']),
+        ]);
 
-        event(new Registered($user = User::create($validated)));
+        if ($this->account_type === 'organization') {
+            $slug = \Illuminate\Support\Str::slug($this->organization_name) . '-' . uniqid();
+            
+            $organization = \App\Models\Organization::create([
+                'name' => $this->organization_name,
+                'type' => $this->organization_type,
+                'slug' => $slug,
+                'website_url' => $this->organization_website,
+            ]);
+
+            $organization->members()->attach($user->id, ['role' => 'owner']);
+        }
+
+        event(new Registered($user));
 
         // Link pending invitations
         $pendingInvites = \App\Models\Invite::where('invitee_email', $user->email)
@@ -142,6 +168,64 @@ new #[Layout('layouts.public')] class extends Component {
                     </div>
                     <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
                 </div>
+
+                <!-- Account Type -->
+                <div class="space-y-2">
+                    <label class="text-sm font-semibold text-slate-300 ml-1">Account Type</label>
+                    <div class="flex items-center space-x-6 mt-2">
+                        <label class="flex items-center text-slate-300 cursor-pointer">
+                            <input type="radio" wire:model.live="account_type" value="individual"
+                                class="border-slate-700 bg-slate-900/50 text-[#257bf4] focus:ring-[#257bf4]/50 rounded-full" />
+                            <span class="ml-2 text-sm">Individual Attendee</span>
+                        </label>
+                        <label class="flex items-center text-slate-300 cursor-pointer">
+                            <input type="radio" wire:model.live="account_type" value="organization"
+                                class="border-slate-700 bg-slate-900/50 text-[#257bf4] focus:ring-[#257bf4]/50 rounded-full" />
+                            <span class="ml-2 text-sm">Organization / Planner</span>
+                        </label>
+                    </div>
+                </div>
+
+                @if ($account_type === 'organization')
+                    <div class="p-6 bg-slate-800/40 border border-[#257bf4]/20 rounded-xl space-y-5">
+                        <h3 class="text-white font-semibold text-sm uppercase tracking-wide">Organization Details</h3>
+                        
+                        <!-- Organization Name -->
+                        <div class="space-y-2">
+                            <label class="text-sm font-semibold text-slate-300 ml-1">Organization Name</label>
+                            <input wire:model="organization_name"
+                                class="w-full bg-slate-900/50 border border-slate-700/50 rounded-xl py-3 px-4 text-white placeholder:text-slate-500 focus:ring-2 focus:ring-[#257bf4]/50 focus:border-[#257bf4] outline-none transition-all"
+                                placeholder="Enter organization name" type="text" required />
+                            <x-input-error :messages="$errors->get('organization_name')" class="mt-2" />
+                        </div>
+
+                        <!-- Organization Type -->
+                        <div class="space-y-2">
+                            <label class="text-sm font-semibold text-slate-300 ml-1">Organization Type</label>
+                            <select wire:model="organization_type"
+                                class="w-full bg-slate-900/50 border border-slate-700/50 rounded-xl py-3 px-4 text-white focus:ring-2 focus:ring-[#257bf4]/50 focus:border-[#257bf4] outline-none transition-all"
+                                required>
+                                <option value="">Select Type</option>
+                                <option value="Corporate">Corporate</option>
+                                <option value="NGO">NGO</option>
+                                <option value="Church">Church / Religious</option>
+                                <option value="University">University / Education</option>
+                                <option value="Community">Community Group</option>
+                                <option value="Other">Other</option>
+                            </select>
+                            <x-input-error :messages="$errors->get('organization_type')" class="mt-2" />
+                        </div>
+
+                        <!-- Organization Website -->
+                        <div class="space-y-2">
+                            <label class="text-sm font-semibold text-slate-300 ml-1">Website URL (Optional)</label>
+                            <input wire:model="organization_website"
+                                class="w-full bg-slate-900/50 border border-slate-700/50 rounded-xl py-3 px-4 text-white placeholder:text-slate-500 focus:ring-2 focus:ring-[#257bf4]/50 focus:border-[#257bf4] outline-none transition-all"
+                                placeholder="https://..." type="url" />
+                            <x-input-error :messages="$errors->get('organization_website')" class="mt-2" />
+                        </div>
+                    </div>
+                @endif
 
                 <!-- Submit Button -->
                 <button
