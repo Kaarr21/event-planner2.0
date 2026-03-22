@@ -39,7 +39,7 @@
                 <div class="glass-card dark:glass-card-dark rounded-[2.5rem] overflow-hidden group hover:scale-[1.02] transition-all duration-500 border-none">
                     <div class="relative h-64 overflow-hidden">
                         <div class="absolute inset-0 bg-cover bg-center group-hover:scale-110 transition-transform duration-700" 
-                             style="background-image: url('https://images.unsplash.com/photo-1511795409834-ef04bbd61622?q=80&w=1000&auto=format&fit=crop')"></div>
+                             style="background-image: url('{{ $event->banner_image_path ? Storage::disk('public')->url($event->banner_image_path) : 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?q=80&w=1000&auto=format&fit=crop' }}')"></div>
                         <div class="absolute inset-0 bg-gradient-to-t from-brand-dark/90 via-brand-dark/20 to-transparent"></div>
                         
                         <!-- Status Badge -->
@@ -86,7 +86,7 @@
                         <div class="space-y-4 mb-8">
                             <div class="flex items-center gap-4 text-gray-500 dark:text-slate-400 text-sm font-bold italic">
                                 <span class="material-symbols-outlined text-brand-orange !text-xl opacity-80">calendar_today</span>
-                                <span>{{ \Carbon\Carbon::parse($event->date)->format('D, M d, Y') }}</span>
+                                <span>{{ $event->start_at ? $event->start_at->format('D, M d, Y') : ($event->date ? $event->date->format('D, M d, Y') : 'Date Pending') }}</span>
                             </div>
                             <div class="flex items-center gap-4 text-gray-500 dark:text-slate-400 text-sm font-bold italic">
                                 <span class="material-symbols-outlined text-brand-teal !text-xl opacity-80">near_me</span>

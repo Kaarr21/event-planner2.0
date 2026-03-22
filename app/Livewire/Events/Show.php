@@ -213,7 +213,10 @@ class Show extends Component
     protected function authorizeUser()
     {
         $user = Auth::user();
-        if (!$user) return redirect()->route('login');
+        if (!$user) {
+             $this->redirect(route('login'));
+             return;
+        }
 
         // Set Spatie context
         setPermissionsTeamId($this->event->id);
@@ -224,12 +227,15 @@ class Show extends Component
         $isGuest = $user->hasRole('guest');
         $invite = $this->event->invites()->where('invitee_id', $user->id)->where('status', 'pending')->first();
         
-        if (!$isOrganizer && !$isOwner && !$isGuest && !$invite) {
-             return redirect()->route('events.index')->with('error', 'You do not have access to this event.');
+        $isCreator = $this->event->user_id === $user->id;
+        
+        if (!$isOrganizer && !$isOwner && !$isGuest && !$invite && !$isCreator) {
+             $this->redirect(route('events.index'), navigate: true);
+             return;
         }
 
         // Determine user role and permissions for the view
-        if ($isOwner) {
+        if ($isOwner || $isCreator) {
             $this->userRole = 'owner';
             $this->userPermissions = $user->getAllPermissions()->pluck('name')->toArray();
         } elseif ($isOrganizer) {

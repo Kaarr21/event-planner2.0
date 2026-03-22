@@ -23,8 +23,26 @@ class Event extends Model
     }
     const STATUS_DRAFT = 'draft';
     const STATUS_PUBLISHED = 'published';
+    const STATUS_ONGOING = 'ongoing';
+    const STATUS_ENDED = 'ended';
     const STATUS_ARCHIVED = 'archived';
     const STATUS_CANCELLED = 'cancelled';
+
+    const VISIBILITY_DRAFT = 'draft';
+    const VISIBILITY_PUBLISHED = 'published';
+    const VISIBILITY_PRIVATE = 'private';
+
+    const RECURRENCE_DAILY = 'daily';
+    const RECURRENCE_WEEKLY = 'weekly';
+    const RECURRENCE_BI_WEEKLY = 'bi-weekly';
+    const RECURRENCE_MONTHLY = 'monthly';
+    const RECURRENCE_YEARLY = 'yearly';
+    const RECURRENCE_CUSTOM = 'custom';
+
+    const UNIT_DAY = 'day';
+    const UNIT_WEEK = 'week';
+    const UNIT_MONTH = 'month';
+    const UNIT_YEAR = 'year';
 
     protected $fillable = [
         'title',
@@ -40,12 +58,30 @@ class Event extends Model
         'cancellation_reason',
         'organization_id',
         'category_id',
+        'banner_image_path',
+        'start_at',
+        'end_at',
+        'timezone',
+        'venue_type',
+        'online_link',
+        'capacity',
+        'visibility',
+        'is_recurring',
+        'recurrence_frequency',
+        'recurrence_interval',
+        'recurrence_unit',
+        'recurrence_end_at',
     ];
 
     protected $casts = [
         'settings' => 'array',
         'date' => 'datetime',
+        'start_at' => 'datetime',
+        'end_at' => 'datetime',
         'status' => 'string',
+        'is_recurring' => 'boolean',
+        'recurrence_interval' => 'integer',
+        'recurrence_end_at' => 'datetime',
     ];
 
     /**
@@ -157,5 +193,46 @@ class Event extends Model
     public function getSetting(string $key, $default = null)
     {
         return $this->settings[$key] ?? $default;
+    }
+
+    /**
+     * Check if the event is currently ongoing.
+     */
+    public function getIsOngoingAttribute()
+    {
+        if ($this->status === self::STATUS_CANCELLED) return false;
+        
+        $now = now();
+        return $this->start_at && $this->end_at && 
+               $now->between($this->start_at, $this->end_at);
+    }
+
+    /**
+     * Check if the event has ended.
+     */
+    public function getIsEndedAttribute()
+    {
+        if ($this->status === self::STATUS_CANCELLED) return false;
+
+        return $this->end_at && now()->greaterThan($this->end_at);
+    }
+
+    /**
+     * Scope for upcoming events.
+     */
+    public function scopeUpcoming($query)
+    {
+        return $query->where('status', self::STATUS_PUBLISHED)
+            ->where('start_at', '>', now());
+    }
+
+    /**
+     * Scope for ongoing events.
+     */
+    public function scopeOngoing($query)
+    {
+        return $query->where('status', self::STATUS_PUBLISHED)
+            ->where('start_at', '<=', now())
+            ->where('end_at', '>=', now());
     }
 }

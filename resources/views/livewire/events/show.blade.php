@@ -1,3 +1,4 @@
+<div>
 <x-slot name="header">
     <div class="flex justify-between items-center">
         <div class="flex items-center gap-4">
@@ -38,6 +39,22 @@
         </a>
     </div>
 </x-slot>
+
+@if($event->banner_image_path)
+    <div class="relative h-[400px] w-full overflow-hidden">
+        <div class="absolute inset-0 bg-cover bg-center" 
+             style="background-image: url('{{ Storage::disk('public')->url($event->banner_image_path) }}')">
+        </div>
+        <div class="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/20 to-transparent"></div>
+        <div class="absolute bottom-0 left-0 right-0 p-12 max-w-7xl mx-auto px-6 lg:px-8">
+            <h1 class="text-6xl font-black text-white uppercase italic tracking-tighter leading-none mb-4">{{ $event->title }}</h1>
+            <div class="flex items-center gap-4 text-white/80 font-bold italic">
+                <span class="material-symbols-outlined text-brand-orange">calendar_today</span>
+                <span>{{ $event->start_at ? $event->start_at->format('D, M d, Y') : ($event->date ? $event->date->format('D, M d, Y') : 'Date Pending') }}</span>
+            </div>
+        </div>
+    </div>
+@endif
 
 <div class="py-12">
     <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
@@ -237,8 +254,8 @@
                                             </div>
                                             <div>
                                                 <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Scheduled</p>
-                                                <p class="text-lg font-black text-gray-900 dark:text-white italic leading-none tracking-tight">{{ \Carbon\Carbon::parse($event->date)->format('M d, Y') }}</p>
-                                                <p class="text-xs text-gray-500 font-bold mt-1 uppercase opacity-60">{{ \Carbon\Carbon::parse($event->date)->format('h:i A') }}</p>
+                                                <p class="text-lg font-black text-gray-900 dark:text-white italic leading-none tracking-tight">{{ $event->start_at ? $event->start_at->format('M d, Y') : ($event->date ? $event->date->format('M d, Y') : 'Date Pending') }}</p>
+                                                <p class="text-xs text-gray-500 font-bold mt-1 uppercase opacity-60">{{ $event->start_at ? $event->start_at->format('h:i A') : ($event->date ? $event->date->format('h:i A') : '') }}</p>
                                             </div>
                                         </div>
                                         <div class="flex items-center gap-6 group">
@@ -1606,3 +1623,4 @@
     }
 </style>
 @endpush
+</div>

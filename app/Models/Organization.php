@@ -32,11 +32,16 @@ class Organization extends Model
         ];
     }
 
-    /**
-     * Get the users that belong to the organization.
-     */
     public function members(): BelongsToMany
     {
         return $this->belongsToMany(User::class)->withPivot('role')->withTimestamps();
+    }
+
+    /**
+     * Get the events for the organization.
+     */
+    public function events(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Event::class);
     }
 }

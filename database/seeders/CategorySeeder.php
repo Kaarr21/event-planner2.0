@@ -15,6 +15,10 @@ class CategorySeeder extends Seeder
         $categories = [
             'Conference',
             'Workshop',
+            'Music',
+            'Sports',
+            'Tech',
+            'Church',
             'Party',
             'Wedding',
             'Seminar',
