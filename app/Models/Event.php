@@ -168,6 +168,22 @@ class Event extends Model
     }
 
     /**
+     * Get the ticket types for the event.
+     */
+    public function ticketTypes()
+    {
+        return $this->hasMany(TicketType::class)->orderBy('price');
+    }
+
+    /**
+     * Get the orders for the event.
+     */
+    public function orders()
+    {
+        return $this->hasMany(Order::class);
+    }
+
+    /**
      * Scope for cancelled events relevant to a user.
      */
     public function scopeCancelledForUser($query, $userId)

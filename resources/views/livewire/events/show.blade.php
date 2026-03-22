@@ -99,6 +99,7 @@
                 @php
                     $tabs = [
                         ['id' => 'overview', 'label' => 'Overview', 'icon' => 'info'],
+                        ['id' => 'tickets', 'label' => 'Tickets', 'icon' => 'local_activity'],
                     ];
                     
                     if ($this->hasPermission('view_tasks') || $this->hasPermission('manage_tasks') || $this->hasPermission('owner')) {
@@ -113,7 +114,9 @@
                         $tabs[] = ['id' => 'budget', 'label' => 'Budget', 'icon' => 'payments'];
                     }
 
-                    $tabs[] = ['id' => 'media', 'label' => 'Media', 'icon' => 'gallery_thumbnail'];
+                    if ($this->hasPermission('view_media') || $this->hasPermission('owner') || $this->hasPermission('manage_media')) {
+                        $tabs[] = ['id' => 'media', 'label' => 'Media', 'icon' => 'gallery_thumbnail'];
+                    }
 
                     if ($this->hasPermission('manage_invites') || $this->hasPermission('owner')) {
                         $tabs[] = ['id' => 'team', 'label' => 'Team', 'icon' => 'shield_person'];
@@ -781,6 +784,13 @@
             @if($activeTab === 'media')
                 <div class="animate-in fade-in slide-in-from-bottom-4 duration-500">
                     <livewire:events.media-library :event="$event" :user-permissions="$userPermissions" :user-role="$userRole" />
+                </div>
+            @endif
+
+            <!-- Tickets Tab -->
+            @if($activeTab === 'tickets')
+                <div class="max-w-4xl mx-auto">
+                    <livewire:events.event-tickets :event="$event" />
                 </div>
             @endif
 

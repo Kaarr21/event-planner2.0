@@ -16,9 +16,10 @@ new class extends Component {
 
     public function with(): array
     {
+        $userId = auth()->id();
         return [
-            'hasCancelledEvents' => \App\Models\Event::cancelledForUser(auth()->id())->exists(),
-            'hasOrganizations' => auth()->user()->organizations()->exists(),
+            'hasCancelledEvents' => $userId ? \App\Models\Event::cancelledForUser($userId)->exists() : false,
+            'hasOrganizations' => $userId ? auth()->user()->organizations()->exists() : false,
         ];
     }
 }; ?>
@@ -40,9 +41,16 @@ new class extends Component {
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" wire:navigate>
                         {{ __('Dashboard') }}
                     </x-nav-link>
-                    <x-nav-link :href="route('events.index')" :active="request()->routeIs('events.index')"
+                    @auth
+                        <x-nav-link :href="route('events.index')" :active="request()->routeIs('events.index')"
+                            wire:navigate>
+                            {{ __('My Events') }}
+                        </x-nav-link>
+                    @endauth
+
+                    <x-nav-link :href="route('events.discovery')" :active="request()->routeIs('events.discovery')"
                         wire:navigate>
-                        {{ __('My Events') }}
+                        {{ __('Discover') }}
                     </x-nav-link>
 
                     @if($hasCancelledEvents)
@@ -58,19 +66,21 @@ new class extends Component {
                         </x-nav-link>
                     @endif
 
-                    <x-nav-link :href="route('notifications.index')" :active="request()->routeIs('notifications.*')"
-                        wire:navigate>
-                        {{ __('Notifications') }}
-                        @php
-                            $unreadCount = \App\Models\Notification::where('user_id', auth()->id())->where('read', false)->count();
-                        @endphp
-                        @if($unreadCount > 0)
-                            <span
-                                class="ms-1 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white bg-[#257bf4] rounded-full">
-                                {{ $unreadCount }}
-                            </span>
-                        @endif
-                    </x-nav-link>
+                    @auth
+                        <x-nav-link :href="route('notifications.index')" :active="request()->routeIs('notifications.*')"
+                            wire:navigate>
+                            {{ __('Notifications') }}
+                            @php
+                                $unreadCount = \App\Models\Notification::where('user_id', auth()->id())->where('read', false)->count();
+                            @endphp
+                            @if($unreadCount > 0)
+                                <span
+                                    class="ms-1 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white bg-[#257bf4] rounded-full">
+                                    {{ $unreadCount }}
+                                </span>
+                            @endif
+                        </x-nav-link>
+                    @endauth
                 </div>
             </div>
 
@@ -104,40 +114,47 @@ new class extends Component {
                     </button>
                 </div>
 
-                <x-dropdown align="right" width="48">
-                    <x-slot name="trigger">
-                        <button
-                            class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 dark:text-gray-400 bg-white dark:bg-[#101722]/50 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none transition ease-in-out duration-150">
-                            <div x-data="{{ json_encode(['name' => auth()->user()->name, 'photo_url' => auth()->user()->profile_photo_url]) }}" class="flex items-center gap-2"
-                                x-on:profile-updated.window="name = $event.detail.name; photo_url = $event.detail.photo_url">
-                                <img :src="photo_url" class="h-8 w-8 rounded-full object-cover" :alt="name">
-                                <span x-text="name"></span>
-                            </div>
+                @auth
+                    <x-dropdown align="right" width="48">
+                        <x-slot name="trigger">
+                            <button
+                                class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 dark:text-gray-400 bg-white dark:bg-[#101722]/50 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none transition ease-in-out duration-150">
+                                <div x-data="{{ json_encode(['name' => auth()->user()->name, 'photo_url' => auth()->user()->profile_photo_url]) }}" class="flex items-center gap-2"
+                                    x-on:profile-updated.window="name = $event.detail.name; photo_url = $event.detail.photo_url">
+                                    <img :src="photo_url" class="h-8 w-8 rounded-full object-cover" :alt="name">
+                                    <span x-text="name"></span>
+                                </div>
 
-                            <div class="ms-1">
-                                <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg"
-                                    viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd"
-                                        d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                                        clip-rule="evenodd" />
-                                </svg>
-                            </div>
-                        </button>
-                    </x-slot>
+                                <div class="ms-1">
+                                    <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg"
+                                        viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd"
+                                            d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                                            clip-rule="evenodd" />
+                                    </svg>
+                                </div>
+                            </button>
+                        </x-slot>
 
-                    <x-slot name="content">
-                        <x-dropdown-link :href="route('profile')" wire:navigate>
-                            {{ __('Profile') }}
-                        </x-dropdown-link>
-
-                        <!-- Authentication -->
-                        <button wire:click="logout" class="w-full text-start">
-                            <x-dropdown-link>
-                                {{ __('Log Out') }}
+                        <x-slot name="content">
+                            <x-dropdown-link :href="route('profile')" wire:navigate>
+                                {{ __('Profile') }}
                             </x-dropdown-link>
-                        </button>
-                    </x-slot>
-                </x-dropdown>
+
+                            <!-- Authentication -->
+                            <button wire:click="logout" class="w-full text-start">
+                                <x-dropdown-link>
+                                    {{ __('Log Out') }}
+                                </x-dropdown-link>
+                            </button>
+                        </x-slot>
+                    </x-dropdown>
+                @else
+                    <div class="flex items-center gap-4">
+                        <a href="{{ route('login') }}" class="text-sm font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300">Login</a>
+                        <a href="{{ route('register') }}" class="inline-flex items-center px-4 py-2 bg-[#257bf4] border border-transparent rounded-md font-bold text-xs text-white uppercase tracking-widest hover:bg-[#257bf4]/90 focus:bg-[#257bf4]/90 active:bg-brand-orange focus:outline-none focus:ring-2 focus:ring-[#257bf4] focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150">Join Now</a>
+                    </div>
+                @endauth
             </div>
 
             <!-- Hamburger -->
@@ -187,61 +204,70 @@ new class extends Component {
             </x-responsive-nav-link>
         </div>
 
-        <!-- Responsive Settings Options -->
-        <div class="pt-4 pb-1 border-t border-gray-200 dark:border-white/10">
-            <div class="flex items-center px-4 gap-3">
-                <div class="flex-shrink-0" x-data="{{ json_encode(['photo_url' => auth()->user()->profile_photo_url]) }}"
-                    x-on:profile-updated.window="photo_url = $event.detail.photo_url">
-                    <img :src="photo_url" class="h-10 w-10 rounded-full object-cover" alt="{{ auth()->user()->name }}">
-                </div>
+        @auth
+            <!-- Responsive Settings Options -->
+            <div class="pt-4 pb-1 border-t border-gray-200 dark:border-white/10">
+                <div class="flex items-center px-4 gap-3">
+                    <div class="flex-shrink-0" x-data="{{ json_encode(['photo_url' => auth()->user()->profile_photo_url]) }}"
+                        x-on:profile-updated.window="photo_url = $event.detail.photo_url">
+                        <img :src="photo_url" class="h-10 w-10 rounded-full object-cover" alt="{{ auth()->user()->name }}">
+                    </div>
 
-                <div class="flex-grow">
-                    <div class="font-medium text-base text-gray-800 dark:text-gray-200"
-                        x-data="{{ json_encode(['name' => auth()->user()->name]) }}" x-text="name"
-                        x-on:profile-updated.window="name = $event.detail.name"></div>
-                    <div class="font-medium text-sm text-gray-500">{{ auth()->user()->email }}</div>
-                </div>
+                    <div class="flex-grow">
+                        <div class="font-medium text-base text-gray-800 dark:text-gray-200"
+                            x-data="{{ json_encode(['name' => auth()->user()->name]) }}" x-text="name"
+                            x-on:profile-updated.window="name = $event.detail.name"></div>
+                        <div class="font-medium text-sm text-gray-500">{{ auth()->user()->email }}</div>
+                    </div>
 
-                <div x-data="{ 
-                    theme: localStorage.theme || 'system',
-                    init() {
-                        window.addEventListener('storage', (e) => {
-                            if (e.key === 'theme') {
-                                this.theme = e.newValue || 'system';
+                    <div x-data="{ 
+                        theme: localStorage.theme || 'system',
+                        init() {
+                            window.addEventListener('storage', (e) => {
+                                if (e.key === 'theme') {
+                                    this.theme = e.newValue || 'system';
+                                }
+                            });
+                        },
+                        setTheme(newTheme) {
+                            this.theme = newTheme;
+                            if (newTheme === 'system') {
+                                localStorage.removeItem('theme');
+                            } else {
+                                localStorage.theme = newTheme;
                             }
-                        });
-                    },
-                    setTheme(newTheme) {
-                        this.theme = newTheme;
-                        if (newTheme === 'system') {
-                            localStorage.removeItem('theme');
-                        } else {
-                            localStorage.theme = newTheme;
+                            if (window.applyTheme) window.applyTheme();
                         }
-                        if (window.applyTheme) window.applyTheme();
-                    }
-                }" class="flex items-center">
-                    <button @click="setTheme(theme === 'light' ? 'dark' : (theme === 'dark' ? 'system' : 'light'))"
-                        class="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 transition duration-150 ease-in-out focus:outline-none">
-                        <span x-show="theme === 'light'" class="material-symbols-outlined">light_mode</span>
-                        <span x-show="theme === 'dark'" class="material-symbols-outlined">dark_mode</span>
-                        <span x-show="theme === 'system'" class="material-symbols-outlined">desktop_windows</span>
+                    }" class="flex items-center">
+                        <button @click="setTheme(theme === 'light' ? 'dark' : (theme === 'dark' ? 'system' : 'light'))"
+                            class="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 transition duration-150 ease-in-out focus:outline-none">
+                            <span x-show="theme === 'light'" class="material-symbols-outlined">light_mode</span>
+                            <span x-show="theme === 'dark'" class="material-symbols-outlined">dark_mode</span>
+                            <span x-show="theme === 'system'" class="material-symbols-outlined">desktop_windows</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="mt-3 space-y-1">
+                    <x-responsive-nav-link :href="route('profile')" wire:navigate>
+                        {{ __('Profile') }}
+                    </x-responsive-nav-link>
+
+                    <!-- Authentication -->
+                    <button wire:click="logout" class="w-full text-start">
+                        <x-responsive-nav-link>
+                            {{ __('Log Out') }}
+                        </x-responsive-nav-link>
                     </button>
                 </div>
             </div>
-
-            <div class="mt-3 space-y-1">
-                <x-responsive-nav-link :href="route('profile')" wire:navigate>
-                    {{ __('Profile') }}
-                </x-responsive-nav-link>
-
-                <!-- Authentication -->
-                <button wire:click="logout" class="w-full text-start">
-                    <x-responsive-nav-link>
-                        {{ __('Log Out') }}
-                    </x-responsive-nav-link>
-                </button>
+        @else
+            <div class="pt-4 pb-1 border-t border-gray-200 dark:border-white/10">
+                <div class="px-4 space-y-2">
+                    <a href="{{ route('login') }}" class="block w-full py-2 text-base font-medium text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200">Login</a>
+                    <a href="{{ route('register') }}" class="block w-full py-2 text-base font-bold text-[#257bf4] hover:text-[#257bf4]/80">Join Now</a>
+                </div>
             </div>
-        </div>
+        @endauth
     </div>
 </nav>

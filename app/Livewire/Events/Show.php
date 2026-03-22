@@ -214,8 +214,13 @@ class Show extends Component
     {
         $user = Auth::user();
         if (!$user) {
-             $this->redirect(route('login'));
-             return;
+            if ($this->event->status === Event::STATUS_PUBLISHED || $this->event->visibility === Event::VISIBILITY_PUBLISHED) {
+                $this->userRole = 'guest';
+                $this->userPermissions = ['view'];
+                return;
+            }
+            $this->redirect(route('login'));
+            return;
         }
 
         // Set Spatie context
@@ -230,6 +235,11 @@ class Show extends Component
         $isCreator = $this->event->user_id === $user->id;
         
         if (!$isOrganizer && !$isOwner && !$isGuest && !$invite && !$isCreator) {
+             if ($this->event->status === Event::STATUS_PUBLISHED || $this->event->visibility === Event::VISIBILITY_PUBLISHED) {
+                 $this->userRole = 'guest';
+                 $this->userPermissions = ['view'];
+                 return;
+             }
              $this->redirect(route('events.index'), navigate: true);
              return;
         }
@@ -305,7 +315,7 @@ class Show extends Component
         }
 
         // Return true if they are an owner OR have the specific permission.
-        return $user->hasRole('owner') || $user->hasPermissionTo($permission);
+        return $user->hasRole('owner') || $user->can($permission);
     }
 
     public function suggestAITasks(\App\Services\AIService $aiService)

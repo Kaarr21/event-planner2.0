@@ -14,11 +14,14 @@ Route::view('profile', 'profile')
     ->middleware(['auth'])
     ->name('profile');
 
+Route::get('/discover', \App\Livewire\Events\Discovery::class)->name('events.discovery');
+Route::get('/events/{event}', \App\Livewire\Events\Show::class)->name('events.show');
+
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/events', \App\Livewire\Events\Index::class)->name('events.index');
     Route::get('/events/cancelled', \App\Livewire\Events\Cancelled::class)->name('events.cancelled');
     Route::get('/events/create', \App\Livewire\Events\Create::class)->name('events.create');
-    Route::get('/events/{event}', \App\Livewire\Events\Show::class)->name('events.show');
+    \Livewire\Volt\Volt::route('/events/{event}/checkout', 'events.checkout')->name('events.checkout');
     Route::get('/notifications', \App\Livewire\Notifications\Index::class)->name('notifications.index');
 });
 

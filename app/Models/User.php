@@ -164,4 +164,20 @@ class User extends Authenticatable implements HasTenants, FilamentUser
         // Require the user to belong to at least one organization to access the panel
         return $this->organizations->count() > 0;
     }
+
+    /**
+     * Get the orders placed by the user.
+     */
+    public function orders()
+    {
+        return $this->hasMany(Order::class);
+    }
+
+    /**
+     * Get the tickets held by the user.
+     */
+    public function tickets()
+    {
+        return $this->hasMany(Ticket::class);
+    }
 }

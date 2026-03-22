@@ -16,6 +16,7 @@
         "livewire/livewire": "^3.6.4",
         "livewire/volt": "^1.7.0",
         "maatwebsite/excel": "^3.1",
+        "simplesoftwareio/simple-qrcode": "*",
         "spatie/laravel-permission": "^6.25",
         "tightenco/ziggy": "^2.0"
     },

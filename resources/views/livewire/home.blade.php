@@ -9,6 +9,8 @@
             <nav class="hidden md:flex items-center gap-10 text-white">
                 <a class="text-sm font-medium hover:text-[#257bf4] transition-colors"
                     href="{{ route('home') }}">Home</a>
+                <a class="text-sm font-medium hover:text-[#257bf4] transition-colors"
+                    href="{{ route('events.discovery') }}">Discover</a>
                 <a class="text-sm font-medium hover:text-[#257bf4] transition-colors" href="{{ route('about') }}">About
                     Us</a>
                 <a class="text-sm font-medium hover:text-[#257bf4] transition-colors"
@@ -58,6 +60,76 @@
                 </div>
             </div>
         </section>
+
+        <!-- Discovery Preview Section -->
+        @if($featuredEvents->isNotEmpty())
+            <section class="py-32 bg-white dark:bg-brand-dark overflow-hidden relative border-b border-white/5">
+                <div class="absolute top-0 right-0 w-96 h-96 bg-brand-orange/5 blur-[120px] rounded-full -translate-y-1/2 translate-x-1/2"></div>
+                
+                <div class="max-w-7xl mx-auto px-6 relative z-10">
+                    <div class="flex flex-col md:flex-row justify-between items-end gap-10 mb-20">
+                        <div class="max-w-2xl">
+                            <h3 class="text-brand-orange font-black text-xs tracking-[0.3em] uppercase mb-4">Discovery</h3>
+                            <h2 class="text-4xl md:text-6xl font-black text-white leading-tight">Shared <span class="text-brand-orange">Experiences</span> Near You</h2>
+                        </div>
+                        <a href="{{ route('events.discovery') }}" class="group flex items-center gap-4 text-white font-bold text-lg hover:text-brand-orange transition-all">
+                            View All Events
+                            <span class="material-symbols-outlined transition-transform group-hover:translate-x-2">arrow_forward</span>
+                        </a>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
+                        @foreach($featuredEvents as $event)
+                            <a href="{{ route('events.show', $event) }}" class="group block glass-card rounded-[3rem] overflow-hidden transition-all hover:-translate-y-3 hover:shadow-3xl hover:shadow-brand-orange/20 border-white/5">
+                                <div class="relative h-72 overflow-hidden">
+                                    <img 
+                                        src="{{ $event->banner_image_path ? Storage::url($event->banner_image_path) : 'https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?q=80&w=2070&auto=format&fit=crop' }}" 
+                                        alt="{{ $event->title }}"
+                                        class="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
+                                    >
+                                    <div class="absolute inset-0 bg-gradient-to-t from-brand-dark via-brand-dark/20 to-transparent"></div>
+                                    
+                                    <div class="absolute top-8 left-8">
+                                        <span class="px-5 py-2 rounded-full bg-brand-orange/90 backdrop-blur-xl text-white text-[10px] font-black uppercase tracking-[0.2em] shadow-lg">
+                                            {{ $event->category->name ?? 'Special' }}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div class="p-10">
+                                    <div class="flex items-center gap-4 mb-6 text-brand-orange">
+                                        <span class="material-symbols-outlined text-sm">event</span>
+                                        <span class="text-xs font-black uppercase tracking-widest">
+                                            {{ $event->start_at ? $event->start_at->format('M d, Y') : ($event->date ? $event->date->format('M d, Y') : 'Date Pending') }}
+                                        </span>
+                                    </div>
+
+                                    <h3 class="text-3xl font-black text-white mb-6 group-hover:text-brand-orange transition-colors line-clamp-2">
+                                        {{ $event->title }}
+                                    </h3>
+
+                                    <div class="flex items-center justify-between pt-8 border-t border-white/5">
+                                        <div class="flex items-center gap-3">
+                                            <img src="{{ $event->creator->profile_photo_url }}" alt="{{ $event->creator->name }}" class="w-10 h-10 rounded-full border-2 border-brand-orange/20">
+                                            <span class="text-xs text-gray-400 font-bold">{{ $event->creator->name }}</span>
+                                        </div>
+                                        @if($event->ticketTypes->isNotEmpty())
+                                            <div class="text-brand-orange font-black text-sm">
+                                                @if($event->ticketTypes->min('price') == 0)
+                                                    FREE
+                                                @else
+                                                    KES {{ number_format($event->ticketTypes->min('price')) }}+
+                                                @endif
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
+                            </a>
+                        @endforeach
+                    </div>
+                </div>
+            </section>
+        @endif
 
         <!-- CTA Action Section -->
         <section class="py-24 bg-background-light dark:bg-[#101722] border-y border-slate-200 dark:border-slate-800">
