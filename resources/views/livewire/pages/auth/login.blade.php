@@ -36,29 +36,25 @@ new #[Layout('layouts.public')] class extends Component {
     }
 }; ?>
 
-<div class="relative min-h-screen w-full flex flex-col bg-hero-blur"
-    style="background-image: linear-gradient(rgba(16, 23, 34, 0.8), rgba(16, 23, 34, 0.8)), url(https://images.unsplash.com/photo-1511795409834-ef04bbd61622?q=80&w=2069&auto=format&fit=crop); background-size: cover; background-position: center;">
-    <header class="flex items-center justify-between whitespace-nowrap px-8 md:px-20 py-6 absolute top-0 w-full z-10">
+<<div class="relative min-h-screen w-full flex flex-col bg-slate-50 font-serif">
+    <header class="flex items-center justify-between px-8 md:px-20 py-6 absolute top-0 w-full z-20">
         <div class="flex items-center gap-3">
-            <x-application-logo class="w-10 h-10" />
+            <x-application-logo class="w-10 h-10 text-indigo-600" />
+            <span class="text-xl font-bold text-slate-800 tracking-tight">Pearl Pavilion</span>
         </div>
         <nav class="flex items-center gap-8">
-            <a class="text-slate-300 hover:text-white text-sm font-semibold transition-colors"
+            <a class="text-xs font-bold text-slate-500 hover:text-indigo-600 uppercase tracking-widest transition-colors"
                 href="{{ route('home') }}" wire:navigate>Home</a>
-            <a class="px-5 py-2 rounded-full bg-white/10 hover:bg-white/20 text-white text-sm font-semibold backdrop-blur-md transition-all border border-white/10"
+            <a class="btn-lux px-6 py-2 text-xs"
                 href="{{ route('register') }}" wire:navigate>Register</a>
         </nav>
     </header>
 
-    <main class="flex-1 flex items-center justify-center px-4 pt-20 pb-12">
-        <div
-            class="glass-panel w-full max-w-[480px] rounded-xl p-8 md:p-12 shadow-2xl relative overflow-hidden bg-[#171022]/60 backdrop-blur-[24px] border border-white/10">
-            <div
-                class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#257bf4] to-transparent opacity-50">
-            </div>
+    <main class="flex-1 flex items-center justify-center px-4 pt-24 pb-12">
+        <div class="w-full max-w-[420px] bg-white border border-slate-100 rounded-lg p-10 md:p-12 shadow-2xl shadow-slate-200/50">
             <div class="mb-10 text-center">
-                <h1 class="text-white text-4xl font-black leading-tight tracking-tight mb-2">Welcome Back</h1>
-                <p class="text-slate-400 text-base font-medium">Elevate your next gathering.</p>
+                <h1 class="text-slate-900 text-3xl font-bold mb-3">Login</h1>
+                <p class="text-slate-500 text-sm italic">Enter your details to continue</p>
             </div>
 
             <x-auth-session-status class="mb-4" :status="session('status')" />
@@ -66,71 +62,62 @@ new #[Layout('layouts.public')] class extends Component {
             <form wire:submit="login" class="space-y-6">
                 <!-- Email Address -->
                 <div class="space-y-2">
-                    <label class="block text-sm font-semibold text-slate-300 ml-1">Email Address</label>
-                    <div class="relative group">
-                        <span
-                            class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-[#257bf4] transition-colors">mail</span>
-                        <input wire:model="form.email"
-                            class="w-full pl-12 pr-4 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-[#257bf4]/50 focus:border-[#257bf4] transition-all"
-                            placeholder="name@example.com" type="email" required autofocus />
-                    </div>
+                    <label class="block text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">Email Address</label>
+                    <input wire:model="form.email"
+                        class="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-lg text-slate-900 placeholder:text-slate-300 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 transition-all font-sans text-sm"
+                        placeholder="name@example.com" type="email" required autofocus />
                     <x-input-error :messages="$errors->get('form.email')" class="mt-2" />
                 </div>
 
                 <!-- Password -->
                 <div class="space-y-2">
-                    <label class="block text-sm font-semibold text-slate-300 ml-1">Password</label>
-                    <div class="relative group">
-                        <span
-                            class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-[#257bf4] transition-colors">lock</span>
-                        <input wire:model="form.password"
-                            class="w-full pl-12 pr-12 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-[#257bf4]/50 focus:border-[#257bf4] transition-all"
-                            placeholder="••••••••" type="password" required />
+                    <div class="flex items-center justify-between ml-1">
+                        <label class="block text-[10px] font-bold uppercase tracking-widest text-slate-400">Password</label>
+                        @if (Route::has('password.request'))
+                            <a class="text-indigo-600 hover:text-indigo-700 text-[10px] font-bold uppercase tracking-widest transition-colors"
+                                href="{{ route('password.request') }}" wire:navigate>
+                                Forgot?
+                            </a>
+                        @endif
                     </div>
+                    <input wire:model="form.password"
+                        class="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-lg text-slate-900 placeholder:text-slate-300 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 transition-all font-sans text-sm"
+                        placeholder="••••••••" type="password" required />
                     <x-input-error :messages="$errors->get('form.password')" class="mt-2" />
                 </div>
 
                 <!-- Remember Me -->
-                <div class="flex items-center justify-between">
-                    <label for="remember" class="inline-flex items-center">
+                <div class="flex items-center">
+                    <label for="remember" class="inline-flex items-center cursor-pointer group">
                         <input wire:model="form.remember" id="remember" type="checkbox"
-                            class="rounded border-white/10 bg-white/5 text-[#257bf4] shadow-sm focus:ring-[#257bf4]"
+                            class="rounded border-slate-200 text-indigo-600 shadow-sm focus:ring-indigo-500"
                             name="remember">
-                        <span class="ms-2 text-sm text-slate-400">{{ __('Remember me') }}</span>
+                        <span class="ms-2 text-[10px] font-bold uppercase tracking-widest text-slate-400 group-hover:text-slate-600 transition-colors">{{ __('Remember me') }}</span>
                     </label>
-
-                    @if (Route::has('password.request'))
-                        <a class="text-slate-400 hover:text-[#257bf4] text-sm font-medium transition-colors"
-                            href="{{ route('password.request') }}" wire:navigate>
-                            {{ __('Forgot your password?') }}
-                        </a>
-                    @endif
                 </div>
 
                 <div class="pt-2">
-                    <button
-                        class="w-full bg-[#257bf4] hover:bg-[#257bf4]/90 text-white font-bold py-4 rounded-xl shadow-lg shadow-[#257bf4]/25 transition-all active:scale-[0.98] flex items-center justify-center gap-2"
-                        type="submit">
-                        <span wire:loading.remove>Log in to Dashboard</span>
+                    <button class="btn-lux w-full py-4 text-xs" type="submit">
+                        <span wire:loading.remove>Login</span>
                         <span wire:loading>Authenticating...</span>
-                        <span class="material-symbols-outlined">arrow_forward</span>
                     </button>
                 </div>
             </form>
 
-            <div class="mt-10 pt-8 border-t border-white/5 text-center">
-                <p class="text-slate-500 text-sm">
+            <div class="mt-10 pt-8 border-t border-slate-50 text-center">
+                <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">
                     Don't have an account?
-                    <a class="text-white hover:text-[#257bf4] font-bold ml-1 transition-colors underline decoration-[#257bf4]/30 underline-offset-4"
-                        href="{{ route('register') }}" wire:navigate>Sign up for free</a>
+                    <a class="text-indigo-600 hover:text-indigo-700 ml-1 transition-colors underline underline-offset-4"
+                        href="{{ route('register') }}" wire:navigate>Sign up</a>
                 </p>
             </div>
         </div>
     </main>
 
-    <footer class="w-full py-6 px-8 text-center md:text-left">
-        <p class="text-slate-500 text-xs font-medium tracking-widest uppercase">
-            © 2024 Event Planner Premium. All rights reserved.
+    <footer class="w-full py-8 text-center">
+        <p class="text-slate-400 text-[9px] font-bold uppercase tracking-[0.2em]">
+            © 2026 Pearl Pavilion. Professional Event Coordination.
         </p>
+    </footer>
     </footer>
 </div>

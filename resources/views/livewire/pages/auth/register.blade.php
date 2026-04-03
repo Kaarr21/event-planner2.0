@@ -79,174 +79,140 @@ new #[Layout('layouts.public')] class extends Component {
     }
 }; ?>
 
-<div class="relative min-h-screen w-full flex flex-col bg-hero-blur"
-    style="background-image: linear-gradient(rgba(16, 23, 34, 0.8), rgba(16, 23, 34, 0.95)), url(https://images.unsplash.com/photo-1511795409834-ef04bbd61622?q=80&w=2069&auto=format&fit=crop); background-size: cover; background-position: center;">
-    <header class="w-full px-6 py-4">
-        <nav
-            class="max-w-7xl mx-auto flex items-center justify-between bg-[#101722]/60 backdrop-blur-[12px] border border-white/10 px-8 py-3 rounded-full text-white">
-            <div class="flex items-center gap-3">
-                <x-application-logo class="w-10 h-10" />
-            </div>
-            <div class="flex items-center gap-8">
-                <div class="hidden md:flex items-center gap-8">
-                    <a class="text-sm font-medium hover:text-[#257bf4] transition-colors" href="{{ route('home') }}"
-                        wire:navigate>Home</a>
-                    <a class="text-sm font-medium hover:text-[#257bf4] transition-colors" href="#">Pricing</a>
-                    <a class="text-sm font-medium hover:text-[#257bf4] transition-colors" href="#">Portfolio</a>
-                </div>
-                <div class="h-6 w-px bg-slate-700 mx-2"></div>
-                <div class="flex items-center gap-4">
-                    <a class="text-sm font-medium hover:text-[#257bf4] transition-colors" href="{{ route('login') }}"
-                        wire:navigate>Login</a>
-                    <a href="{{ route('register') }}"
-                        class="bg-[#257bf4] hover:bg-[#257bf4]/90 text-white px-6 py-2 rounded-full text-sm font-bold transition-all shadow-lg shadow-[#257bf4]/20">
-                        Get Started
-                    </a>
-                </div>
-            </div>
+<<div class="relative min-h-screen w-full flex flex-col bg-slate-50 font-serif">
+    <header class="flex items-center justify-between px-8 md:px-20 py-6 absolute top-0 w-full z-20">
+        <div class="flex items-center gap-3">
+            <x-application-logo class="w-10 h-10 text-indigo-600" />
+            <span class="text-xl font-bold text-slate-800 tracking-tight">Pearl Pavilion</span>
+        </div>
+        <nav class="flex items-center gap-8">
+            <a class="text-xs font-bold text-slate-500 hover:text-indigo-600 uppercase tracking-widest transition-colors"
+                href="{{ route('home') }}" wire:navigate>Home</a>
+            <a class="btn-lux px-6 py-2 text-xs"
+                href="{{ route('login') }}" wire:navigate>Login</a>
         </nav>
     </header>
 
-    <main class="flex-1 flex items-center justify-center p-6">
-        <div
-            class="w-full max-w-[520px] bg-[#101722]/60 backdrop-blur-[12px] border border-white/10 rounded-xl p-8 md:p-12 shadow-2xl text-white">
+    <main class="flex-1 flex items-center justify-center px-4 pt-24 pb-12">
+        <div class="w-full max-w-[480px] bg-white border border-slate-100 rounded-lg p-10 md:p-12 shadow-2xl shadow-slate-200/50">
             <div class="mb-10 text-center">
-                <h1 class="text-3xl font-black mb-2 tracking-tight">Join Event Planner</h1>
-                <p class="text-slate-400 font-normal">Create your premium account to start planning gala events.</p>
+                <h1 class="text-slate-900 text-3xl font-bold mb-3">Register</h1>
+                <p class="text-slate-500 text-sm italic">Create your account to start planning</p>
             </div>
 
-            <form wire:submit="register" class="space-y-5">
+            <form wire:submit="register" class="space-y-6">
                 <!-- Name -->
                 <div class="space-y-2">
-                    <label class="text-sm font-semibold text-slate-300 ml-1">Full Name</label>
-                    <div class="relative group">
-                        <span
-                            class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-[#257bf4] transition-colors">person</span>
-                        <input wire:model="name"
-                            class="w-full bg-slate-900/50 border border-slate-700/50 rounded-xl py-4 pl-12 pr-4 text-white placeholder:text-slate-500 focus:ring-2 focus:ring-[#257bf4]/50 focus:border-[#257bf4] outline-none transition-all"
-                            placeholder="Enter your full name" type="text" required autofocus autocomplete="name" />
-                    </div>
+                    <label class="block text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">Full Name</label>
+                    <input wire:model="name"
+                        class="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-lg text-slate-900 placeholder:text-slate-300 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 transition-all font-sans text-sm"
+                        placeholder="Enter your full name" type="text" required autofocus autocomplete="name" />
                     <x-input-error :messages="$errors->get('name')" class="mt-2" />
                 </div>
 
                 <!-- Email Address -->
                 <div class="space-y-2">
-                    <label class="text-sm font-semibold text-slate-300 ml-1">Email Address</label>
-                    <div class="relative group">
-                        <span
-                            class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-[#257bf4] transition-colors">mail</span>
-                        <input wire:model="email"
-                            class="w-full bg-slate-900/50 border border-slate-700/50 rounded-xl py-4 pl-12 pr-4 text-white placeholder:text-slate-500 focus:ring-2 focus:ring-[#257bf4]/50 focus:border-[#257bf4] outline-none transition-all"
-                            placeholder="name@company.com" type="email" required autocomplete="username" />
-                    </div>
+                    <label class="block text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">Email Address</label>
+                    <input wire:model="email"
+                        class="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-lg text-slate-900 placeholder:text-slate-300 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 transition-all font-sans text-sm"
+                        placeholder="name@example.com" type="email" required autocomplete="username" />
                     <x-input-error :messages="$errors->get('email')" class="mt-2" />
                 </div>
 
-                <!-- Password -->
-                <div class="space-y-2">
-                    <label class="text-sm font-semibold text-slate-300 ml-1">Password</label>
-                    <div class="relative group">
-                        <span
-                            class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-[#257bf4] transition-colors">lock</span>
+                <!-- Password Row -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="space-y-2">
+                        <label class="block text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">Password</label>
                         <input wire:model="password"
-                            class="w-full bg-slate-900/50 border border-slate-700/50 rounded-xl py-4 pl-12 pr-12 text-white placeholder:text-slate-500 focus:ring-2 focus:ring-[#257bf4]/50 focus:border-[#257bf4] outline-none transition-all"
-                            placeholder="Create a strong password" type="password" required
-                            autocomplete="new-password" />
+                            class="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-lg text-slate-900 placeholder:text-slate-300 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 transition-all font-sans text-sm"
+                            placeholder="••••••••" type="password" required autocomplete="new-password" />
+                        <x-input-error :messages="$errors->get('password')" class="mt-2" />
                     </div>
-                    <x-input-error :messages="$errors->get('password')" class="mt-2" />
-                </div>
-
-                <!-- Confirm Password -->
-                <div class="space-y-2">
-                    <label class="text-sm font-semibold text-slate-300 ml-1">Confirm Password</label>
-                    <div class="relative group">
-                        <span
-                            class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-[#257bf4] transition-colors">lock_reset</span>
+                    <div class="space-y-2">
+                        <label class="block text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">Confirm</label>
                         <input wire:model="password_confirmation"
-                            class="w-full bg-slate-900/50 border border-slate-700/50 rounded-xl py-4 pl-12 pr-4 text-white placeholder:text-slate-500 focus:ring-2 focus:ring-[#257bf4]/50 focus:border-[#257bf4] outline-none transition-all"
-                            placeholder="Repeat your password" type="password" required autocomplete="new-password" />
+                            class="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-lg text-slate-900 placeholder:text-slate-300 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 transition-all font-sans text-sm"
+                            placeholder="••••••••" type="password" required autocomplete="new-password" />
+                        <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
                     </div>
-                    <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
                 </div>
 
                 <!-- Account Type -->
                 <div class="space-y-2">
-                    <label class="text-sm font-semibold text-slate-300 ml-1">Account Type</label>
-                    <div class="flex items-center space-x-6 mt-2">
-                        <label class="flex items-center text-slate-300 cursor-pointer">
+                    <label class="block text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">Account Type</label>
+                    <div class="flex items-center space-x-8 mt-2 ml-1">
+                        <label class="flex items-center cursor-pointer group">
                             <input type="radio" wire:model.live="account_type" value="individual"
-                                class="border-slate-700 bg-slate-900/50 text-[#257bf4] focus:ring-[#257bf4]/50 rounded-full" />
-                            <span class="ml-2 text-sm">Individual Attendee</span>
+                                class="border-slate-200 text-indigo-600 focus:ring-indigo-500" />
+                            <span class="ml-2 text-[10px] font-bold uppercase tracking-widest text-slate-400 group-hover:text-slate-600 transition-colors">Individual</span>
                         </label>
-                        <label class="flex items-center text-slate-300 cursor-pointer">
+                        <label class="flex items-center cursor-pointer group">
                             <input type="radio" wire:model.live="account_type" value="organization"
-                                class="border-slate-700 bg-slate-900/50 text-[#257bf4] focus:ring-[#257bf4]/50 rounded-full" />
-                            <span class="ml-2 text-sm">Organization / Planner</span>
+                                class="border-slate-200 text-indigo-600 focus:ring-indigo-500" />
+                            <span class="ml-2 text-[10px] font-bold uppercase tracking-widest text-slate-400 group-hover:text-slate-600 transition-colors">Organization</span>
                         </label>
                     </div>
                 </div>
 
                 @if ($account_type === 'organization')
-                    <div class="p-6 bg-slate-800/40 border border-[#257bf4]/20 rounded-xl space-y-5">
-                        <h3 class="text-white font-semibold text-sm uppercase tracking-wide">Organization Details</h3>
+                    <div class="p-6 bg-slate-50 border border-slate-100 rounded-lg space-y-5">
+                        <h3 class="text-slate-900 font-bold text-[10px] uppercase tracking-[0.2em] mb-4">Organization Details</h3>
                         
-                        <!-- Organization Name -->
                         <div class="space-y-2">
-                            <label class="text-sm font-semibold text-slate-300 ml-1">Organization Name</label>
+                            <label class="block text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">Name</label>
                             <input wire:model="organization_name"
-                                class="w-full bg-slate-900/50 border border-slate-700/50 rounded-xl py-3 px-4 text-white placeholder:text-slate-500 focus:ring-2 focus:ring-[#257bf4]/50 focus:border-[#257bf4] outline-none transition-all"
-                                placeholder="Enter organization name" type="text" required />
+                                class="w-full px-4 py-2.5 bg-white border border-slate-100 rounded-lg text-slate-900 placeholder:text-slate-300 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 transition-all font-sans text-sm"
+                                placeholder="Organization Name" type="text" required />
                             <x-input-error :messages="$errors->get('organization_name')" class="mt-2" />
                         </div>
 
-                        <!-- Organization Type -->
                         <div class="space-y-2">
-                            <label class="text-sm font-semibold text-slate-300 ml-1">Organization Type</label>
+                            <label class="block text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">Type</label>
                             <select wire:model="organization_type"
-                                class="w-full bg-slate-900/50 border border-slate-700/50 rounded-xl py-3 px-4 text-white focus:ring-2 focus:ring-[#257bf4]/50 focus:border-[#257bf4] outline-none transition-all"
+                                class="w-full px-4 py-2.5 bg-white border border-slate-100 rounded-lg text-slate-900 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 transition-all font-sans text-sm"
                                 required>
                                 <option value="">Select Type</option>
                                 <option value="Corporate">Corporate</option>
                                 <option value="NGO">NGO</option>
-                                <option value="Church">Church / Religious</option>
-                                <option value="University">University / Education</option>
-                                <option value="Community">Community Group</option>
+                                <option value="Church">Religious</option>
+                                <option value="University">Education</option>
+                                <option value="Community">Community</option>
                                 <option value="Other">Other</option>
                             </select>
                             <x-input-error :messages="$errors->get('organization_type')" class="mt-2" />
                         </div>
 
-                        <!-- Organization Website -->
                         <div class="space-y-2">
-                            <label class="text-sm font-semibold text-slate-300 ml-1">Website URL (Optional)</label>
+                            <label class="block text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">Website (Optional)</label>
                             <input wire:model="organization_website"
-                                class="w-full bg-slate-900/50 border border-slate-700/50 rounded-xl py-3 px-4 text-white placeholder:text-slate-500 focus:ring-2 focus:ring-[#257bf4]/50 focus:border-[#257bf4] outline-none transition-all"
+                                class="w-full px-4 py-2.5 bg-white border border-slate-100 rounded-lg text-slate-900 placeholder:text-slate-300 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 transition-all font-sans text-sm"
                                 placeholder="https://..." type="url" />
                             <x-input-error :messages="$errors->get('organization_website')" class="mt-2" />
                         </div>
                     </div>
                 @endif
 
-                <!-- Submit Button -->
-                <button
-                    class="w-full bg-[#257bf4] hover:bg-[#257bf4]/90 text-white font-bold py-4 rounded-xl transition-all shadow-xl shadow-[#257bf4]/20 transform hover:-translate-y-0.5 mt-4"
-                    type="submit">
-                    Register Account
-                </button>
+                <div class="pt-2">
+                    <button class="btn-lux w-full py-4 text-xs" type="submit">
+                        <span wire:loading.remove>Register</span>
+                        <span wire:loading>Joining...</span>
+                    </button>
+                </div>
             </form>
 
-            <div class="mt-8 text-center">
-                <p class="text-slate-400 text-sm">
+            <div class="mt-10 pt-8 border-t border-slate-50 text-center">
+                <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">
                     Already have an account?
-                    <a class="text-[#257bf4] font-bold hover:underline ml-1" href="{{ route('login') }}"
-                        wire:navigate>Log in here</a>
+                    <a class="text-indigo-600 hover:text-indigo-700 ml-1 transition-colors underline underline-offset-4"
+                        href="{{ route('login') }}" wire:navigate>Login</a>
                 </p>
             </div>
         </div>
     </main>
 
-    <footer class="w-full p-8 text-center">
-        <p class="text-slate-500 text-xs tracking-widest uppercase">© 2024 Event Planner Premium. All Rights Reserved.
+    <footer class="w-full py-8 text-center">
+        <p class="text-slate-400 text-[9px] font-bold uppercase tracking-[0.2em]">
+            © 2026 Pearl Pavilion. Professional Event Coordination.
         </p>
     </footer>
 </div>

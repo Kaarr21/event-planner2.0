@@ -10,6 +10,7 @@ use Filament\Pages;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\Enums\ThemeMode;
 use Filament\Navigation\NavigationItem;
 use Filament\Widgets;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
@@ -28,13 +29,21 @@ class AdminPanelProvider extends PanelProvider
             ->id('org-admin')
             ->path('org-admin')
             ->login()
+            ->registration()
+            ->passwordReset()
+            ->emailVerification()
+            ->profile()
             ->tenant(\App\Models\Organization::class)
             ->tenantProfile(\App\Filament\Pages\Tenancy\EditOrganizationProfile::class)
             ->colors([
-                'primary' => '#257bf4',
+                'primary' => Color::Indigo,
                 'gray' => Color::Slate,
             ])
+            ->font('Plus Jakarta Sans')
+            ->darkMode(true)
+            ->defaultThemeMode(ThemeMode::Light)
             ->navigationItems([
+
                 NavigationItem::make('Back to App Dashboard')
                     ->url('/dashboard')
                     ->icon('heroicon-o-arrow-left')

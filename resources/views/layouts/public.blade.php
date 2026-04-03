@@ -57,6 +57,7 @@
         </style>
     </head>
     <body class="bg-gray-50 dark:bg-[#0f172a] font-sans antialiased text-gray-900 dark:text-gray-100 transition-colors duration-300">
-        {{ $slot }}
+        {{ $slot ?? '' }}
+        @yield('content')
     </body>
 </html>

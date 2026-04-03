@@ -77,7 +77,7 @@ new class extends Component {
         session(['ticket_selection' => array_filter($this->selectedQuantities, fn($q) => $q > 0)]);
 
         if (!auth()->check()) {
-            return redirect()->route('login');
+            return redirect()->guest(route('login'));
         }
 
         // Validate availability again before creating order
@@ -107,6 +107,11 @@ new class extends Component {
             return;
         }
 
+        if ($order->status !== 'confirmed') {
+            $this->dispatch('notify', message: 'Tickets can only be downloaded for confirmed payments.', type: 'warning');
+            return;
+        }
+
         $pdf = Pdf::loadView('pdfs.ticket', ['order' => $order]);
         
         return response()->streamDownload(
@@ -132,42 +137,54 @@ new class extends Component {
     }
 }; ?>
 
-<div class="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-12">
+<div class="animate-in fade-in slide-in-from-bottom-8 duration-700 space-y-12">
     @if($userOrders->isNotEmpty())
-        <div class="glass-card dark:glass-card-dark rounded-[3rem] border-none shadow-3xl overflow-hidden relative">
-            <div class="p-10 md:p-14 relative z-10">
+        <div class="bg-white rounded-[4rem] border border-slate-100 shadow-lux overflow-hidden relative">
+            <div class="p-12 md:p-14 relative z-10">
                 <div class="flex items-center justify-between mb-12">
                     <div class="flex items-center gap-6">
-                        <div class="w-16 h-16 rounded-[2rem] bg-brand-teal/10 flex items-center justify-center text-brand-teal shadow-lg shadow-brand-teal/5">
-                            <span class="material-symbols-outlined text-3xl font-black">fact_check</span>
+                        <div class="w-16 h-16 rounded-[2rem] bg-emerald-50 flex items-center justify-center text-emerald-600 shadow-sm">
+                            <span class="material-symbols-outlined text-3xl font-bold">fact_check</span>
                         </div>
                         <div>
-                            <h3 class="text-3xl font-black text-gray-900 dark:text-white uppercase tracking-tighter italic leading-none mb-1">Your Access Passes</h3>
-                            <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest opacity-60 italic">You are confirmed for this experience.</p>
+                            <h3 class="text-3xl font-display font-extrabold text-slate-900 uppercase tracking-tight italic leading-none mb-2">Verified Access Passes</h3>
+                            <p class="text-[11px] font-bold text-slate-400 uppercase tracking-[0.4em] opacity-80 italic">Your authenticated clearance for this experience.</p>
                         </div>
                     </div>
                 </div>
 
-                <div class="space-y-4">
+                <div class="space-y-6">
                     @foreach($userOrders as $order)
-                        <div class="flex flex-col md:flex-row items-start md:items-center justify-between p-8 bg-brand-teal/5 rounded-[2.5rem] border border-brand-teal/10 group animate-in slide-in-from-left duration-500" style="animation-delay: {{ $loop->index * 100 }}ms">
+                        <div class="flex flex-col lg:flex-row items-stretch lg:items-center justify-between p-10 {{ $order->status === 'confirmed' ? 'bg-emerald-50/30 border-emerald-100' : ($order->status === 'failed' ? 'bg-rose-50/30 border-rose-100' : 'bg-slate-50 border-slate-100') }} rounded-[3rem] border group animate-in slide-in-from-left duration-700" style="animation-delay: {{ $loop->index * 150 }}ms">
                             <div class="flex-1">
-                                <div class="flex items-center gap-4 mb-2">
-                                    <h4 class="text-xl font-black text-gray-900 dark:text-white uppercase italic tracking-tighter">Order #{{ $order->id }}</h4>
-                                    <span class="px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest bg-brand-teal text-white">Confirmed</span>
+                                <div class="flex items-center gap-5 mb-4">
+                                    <h4 class="text-2xl font-bold text-slate-900 uppercase italic tracking-tight">Voucher #{{ $order->id }}</h4>
+                                    @if($order->status === 'confirmed')
+                                        <span class="px-5 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest bg-emerald-500 text-white shadow-lg shadow-emerald-100">Authenticated</span>
+                                    @elseif($order->status === 'failed')
+                                        <span class="px-5 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest bg-rose-500 text-white shadow-lg shadow-rose-100">Retracted</span>
+                                    @else
+                                        <span class="px-5 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest bg-indigo-600 text-white shadow-lg shadow-indigo-100">Awaiting Clear</span>
+                                    @endif
                                 </div>
-                                <div class="flex flex-wrap gap-2 mt-4">
+                                <div class="flex flex-wrap gap-3 mt-6">
                                     @foreach($order->tickets as $ticket)
-                                        <span class="px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest bg-white/5 border border-white/10 text-gray-500 italic">
+                                        <span class="px-6 py-2 rounded-2xl text-[11px] font-bold uppercase tracking-widest bg-white border border-slate-100 text-slate-500 italic shadow-sm group-hover:scale-105 transition-transform">
                                             {{ $ticket->ticketType->name }}
                                         </span>
                                     @endforeach
                                 </div>
                             </div>
-                            <button wire:click="downloadTickets({{ $order->id }})" class="mt-6 md:mt-0 px-8 py-4 rounded-2xl bg-white/10 border border-white/10 text-xs font-black uppercase tracking-widest text-gray-900 dark:text-white hover:bg-brand-orange hover:text-white hover:border-brand-orange transition-all flex items-center gap-3 active:scale-95 shadow-lg group">
-                                <span class="material-symbols-outlined text-xl group-hover:animate-bounce">download</span>
-                                Download All Passes
-                            </button>
+                            @if($order->status === 'confirmed')
+                                <button wire:click="downloadTickets({{ $order->id }})" class="mt-8 lg:mt-0 px-10 py-5 rounded-[1.5rem] bg-indigo-600 text-white text-[11px] font-bold uppercase tracking-widest hover:bg-indigo-700 transition-all flex items-center justify-center gap-4 active:scale-95 shadow-xl shadow-indigo-100 group">
+                                    <span class="material-symbols-outlined text-xl group-hover:scale-125 transition-transform">file_download</span>
+                                    Retrieve Credentials
+                                </button>
+                            @else
+                                <div class="mt-8 lg:mt-0 px-10 py-5 rounded-[1.5rem] bg-slate-100/50 border border-slate-200 text-[11px] font-bold uppercase tracking-widest text-slate-400 italic text-center">
+                                    Pending Cryptographic Review
+                                </div>
+                            @endif
                         </div>
                     @endforeach
                 </div>
@@ -175,98 +192,100 @@ new class extends Component {
         </div>
     @endif
 
-    <div class="glass-card dark:glass-card-dark rounded-[3rem] border-none shadow-3xl overflow-hidden relative">
+    <div class="bg-white rounded-[4rem] border border-slate-100 shadow-lux overflow-hidden relative">
         <!-- Decoration -->
-        <div class="absolute -top-24 -right-24 w-48 h-48 bg-brand-orange/5 rounded-full blur-[60px]"></div>
+        <div class="absolute -top-32 -right-32 w-64 h-64 bg-indigo-50/50 rounded-full blur-[80px]"></div>
         
-        <div class="p-10 md:p-14 relative z-10">
-            <div class="flex items-center gap-6 mb-12">
-                <div class="w-16 h-16 rounded-[2rem] bg-brand-orange/10 flex items-center justify-center text-brand-orange shadow-lg shadow-brand-orange/5">
-                    <span class="material-symbols-outlined text-3xl font-black">local_activity</span>
+        <div class="p-12 md:p-14 relative z-10">
+            <div class="flex items-center gap-6 mb-14">
+                <div class="w-16 h-16 rounded-[2rem] bg-indigo-50 flex items-center justify-center text-indigo-600 shadow-sm">
+                    <span class="material-symbols-outlined text-3xl font-bold">local_activity</span>
                 </div>
                 <div>
-                    <h3 class="text-3xl font-black text-gray-900 dark:text-white uppercase tracking-tighter italic leading-none mb-1">Select Access</h3>
-                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest opacity-60">Choose your tier for this experience.</p>
+                    <h3 class="text-3xl font-display font-extrabold text-slate-900 uppercase tracking-tight italic leading-none mb-2">Acquire Access</h3>
+                    <p class="text-[11px] font-bold text-slate-400 uppercase tracking-[0.4em] opacity-80 italic">Curate your placement within the experience.</p>
                 </div>
             </div>
 
-            <div class="space-y-6">
+            <div class="space-y-8">
                 @forelse($ticketTypes as $type)
-                    <div class="p-8 bg-white/5 rounded-[2.5rem] border border-white/5 hover:border-brand-orange/20 transition-all duration-500 group">
-                        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
+                    <div class="p-10 bg-slate-50/50 rounded-[3.5rem] border border-slate-100 hover:border-indigo-100 transition-all duration-700 group shadow-sm hover:shadow-indigo-50/30">
+                        <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-10">
                             <div class="flex-1">
-                                <div class="flex items-center gap-4 mb-3">
-                                    <h4 class="text-2xl font-black text-gray-900 dark:text-white uppercase italic tracking-tighter leading-none">{{ $type->name }}</h4>
-                                    <span class="px-4 py-1.5 rounded-full text-[8px] font-black uppercase tracking-[0.2em] border border-brand-orange/20 text-brand-orange bg-brand-orange/5">
+                                <div class="flex items-center gap-5 mb-4">
+                                    <h4 class="text-3xl font-display font-extrabold text-slate-900 uppercase italic tracking-tight leading-none group-hover:text-indigo-600 transition-colors">{{ $type->name }}</h4>
+                                    <span class="px-5 py-2 rounded-full text-[9px] font-bold uppercase tracking-[0.3em] border border-indigo-100 text-indigo-600 bg-white shadow-sm">
                                         {{ $type->type }}
                                     </span>
                                 </div>
                                 @if($type->description)
-                                    <p class="text-sm text-gray-500 dark:text-gray-400 font-bold italic tracking-tight opacity-60 mb-6 leading-relaxed max-w-2xl">{{ $type->description }}</p>
+                                    <p class="text-[15px] text-slate-500 font-medium italic tracking-tight opacity-70 mb-8 leading-relaxed max-w-3xl">{{ $type->description }}</p>
                                 @endif
-                                <div class="flex items-center gap-8">
-                                    <p class="text-3xl font-black text-brand-orange italic tracking-tighter">
+                                <div class="flex flex-wrap items-center gap-10">
+                                    <p class="text-4xl font-display font-black text-slate-900 italic tracking-tight">
                                         {{ $type->price > 0 ? 'KES ' . number_format($type->price, 0) : 'COMPLIMENTARY' }}
                                     </p>
                                     @if($type->capacity)
-                                        <div class="flex items-center gap-2 px-3 py-1 rounded-lg bg-white/5 border border-white/10">
-                                            <span class="w-1.5 h-1.5 rounded-full {{ ($type->capacity - $type->sold_count) < 10 ? 'bg-brand-red animate-pulse' : 'bg-brand-teal' }}"></span>
-                                            <p class="text-[10px] font-black text-gray-500 uppercase tracking-widest">
-                                                {{ $type->capacity - $type->sold_count }} available
+                                        <div class="flex items-center gap-3 px-5 py-2.5 rounded-2xl bg-white border border-slate-100 shadow-sm">
+                                            <span class="w-2.5 h-2.5 rounded-full {{ ($type->capacity - $type->sold_count) < 20 ? 'bg-rose-500 animate-pulse' : 'bg-emerald-500' }}"></span>
+                                            <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest italic leading-none">
+                                                {{ $type->capacity - $type->sold_count }} entries remaining
                                             </p>
                                         </div>
                                     @endif
                                 </div>
                             </div>
 
-                            <div class="flex items-center gap-6 bg-white/5 p-4 rounded-[2rem] border border-white/5 shadow-inner">
+                            <div class="flex items-center gap-8 bg-white p-5 rounded-[2.5rem] border border-slate-100 shadow-lux w-full lg:w-auto justify-center">
                                 @if($type->sale_start_date && $type->sale_start_date->isFuture())
-                                    <div class="px-6 py-2">
-                                        <p class="text-[10px] font-black text-brand-orange uppercase tracking-[.2em] leading-none mb-1">Coming Soon</p>
-                                        <p class="text-[8px] font-bold text-gray-500 uppercase tracking-widest">{{ $type->sale_start_date->format('M d, Y') }}</p>
+                                    <div class="px-10 py-3 text-center">
+                                        <p class="text-[11px] font-bold text-indigo-600 uppercase tracking-[.3em] leading-none mb-2 italic">Awaiting Release</p>
+                                        <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{{ $type->sale_start_date->format('M d, Y') }}</p>
                                     </div>
                                 @elseif($type->sale_end_date && $type->sale_end_date->isPast())
-                                    <div class="px-6 py-2">
-                                        <p class="text-[10px] font-black text-brand-red uppercase tracking-[.2em] leading-none mb-1">Ended</p>
-                                        <p class="text-[8px] font-bold text-gray-500 uppercase tracking-widest">{{ $type->sale_end_date->format('M d, Y') }}</p>
+                                    <div class="px-10 py-3 text-center">
+                                        <p class="text-[11px] font-bold text-rose-500 uppercase tracking-[.3em] leading-none mb-2 italic">Sales Terminated</p>
+                                        <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{{ $type->sale_end_date->format('M d, Y') }}</p>
                                     </div>
                                 @elseif($type->capacity !== null && $type->sold_count >= $type->capacity)
-                                    <div class="px-6 py-2">
-                                        <p class="text-[10px] font-black text-brand-red uppercase tracking-[.2em] leading-none">Sold Out</p>
+                                    <div class="px-10 py-3 text-center">
+                                        <p class="text-[13px] font-bold text-rose-500 uppercase tracking-[.4em] leading-none italic">Sold Out</p>
                                     </div>
                                 @else
-                                    <button type="button" wire:click="decrement({{ $type->id }})" class="w-12 h-12 rounded-[1.25rem] bg-white/5 flex items-center justify-center text-gray-400 hover:text-brand-orange hover:bg-white/10 transition-all active:scale-90 border border-white/5">
-                                        <span class="material-symbols-outlined font-black">remove</span>
+                                    <button type="button" wire:click="decrement({{ $type->id }})" class="w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all active:scale-90 border border-slate-100 hover:rotate-[-8deg]">
+                                        <span class="material-symbols-outlined font-bold text-2xl">remove</span>
                                     </button>
-                                    <span class="text-2xl font-black text-gray-900 dark:text-white w-10 text-center italic tracking-tighter">{{ $selectedQuantities[$type->id] ?? 0 }}</span>
-                                    <button type="button" wire:click="increment({{ $type->id }})" class="w-12 h-12 rounded-[1.25rem] bg-white/5 flex items-center justify-center text-gray-400 hover:text-brand-orange hover:bg-white/10 transition-all active:scale-90 border border-white/5">
-                                        <span class="material-symbols-outlined font-black">add</span>
+                                    <span class="text-3xl font-display font-extrabold text-slate-900 w-12 text-center italic tracking-tight">{{ $selectedQuantities[$type->id] ?? 0 }}</span>
+                                    <button type="button" wire:click="increment({{ $type->id }})" class="w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all active:scale-90 border border-slate-100 hover:rotate-[8deg]">
+                                        <span class="material-symbols-outlined font-bold text-2xl">add</span>
                                     </button>
                                 @endif
                             </div>
                         </div>
                     </div>
                 @empty
-                    <div class="text-center py-24 bg-white/5 rounded-[3rem] border border-dashed border-white/10 opacity-60">
-                        <span class="material-symbols-outlined text-7xl text-brand-orange mb-6 opacity-20">inventory_2</span>
-                        <p class="text-sm font-black text-gray-500 uppercase tracking-[0.3em] italic">The box office is currently closed.</p>
+                    <div class="text-center py-32 bg-slate-50/50 rounded-[4rem] border-2 border-dashed border-slate-200 opacity-60">
+                        <div class="w-24 h-24 rounded-[3rem] bg-white shadow-lux flex items-center justify-center text-slate-200 mx-auto mb-10">
+                            <span class="material-symbols-outlined text-6xl">inventory_2</span>
+                        </div>
+                        <p class="text-[15px] font-bold text-slate-400 uppercase tracking-[0.4em] italic leading-relaxed">The box office is presently void of activity.</p>
                     </div>
                 @endforelse
             </div>
         </div>
 
         @if($totalAmount > 0 || collect($selectedQuantities)->some(fn($q) => $q > 0))
-            <div class="bg-brand-orange/10 p-10 md:p-14 border-t border-brand-orange/10 backdrop-blur-md">
-                <div class="flex flex-col md:flex-row justify-between items-center gap-10">
-                    <div class="text-center md:text-left">
-                        <p class="text-[10px] font-black text-brand-orange uppercase tracking-[.4em] mb-2">Total Access Fee</p>
-                        <h4 class="text-6xl font-black text-gray-900 dark:text-white italic tracking-tighter leading-none">
-                            <span class="text-2xl not-italic opacity-40 mr-2">KES</span>{{ number_format($totalAmount, 0) }}
+            <div class="bg-indigo-600 p-12 md:p-14 shadow-[0_-20px_80px_rgba(67,56,202,0.15)] relative z-20">
+                <div class="flex flex-col lg:flex-row justify-between items-center gap-12">
+                    <div class="text-center lg:text-left">
+                        <p class="text-[11px] font-bold text-indigo-200 uppercase tracking-[.6em] mb-4 italic opacity-80 leading-none">Aggregated Access Fee</p>
+                        <h4 class="text-7xl font-display font-extrabold text-white italic tracking-tight leading-none">
+                            <span class="text-2xl not-italic opacity-50 mr-4 font-bold tracking-widest">KES</span>{{ number_format($totalAmount, 0) }}
                         </h4>
                     </div>
-                    <button wire:click="checkout" class="btn-brand pamoja-gradient py-6 px-20 group w-full md:w-auto text-xl shadow-2xl shadow-brand-orange/20">
-                        {{ auth()->check() ? 'Proceed to Checkout' : 'Login to Secure Access' }}
-                        <span class="material-symbols-outlined text-2xl ml-4 group-hover:translate-x-2 transition-transform">arrow_forward</span>
+                    <button wire:click="checkout" class="w-full lg:w-auto px-20 py-8 bg-white text-indigo-600 rounded-[2.5rem] font-display font-extrabold uppercase tracking-[0.3em] text-lg hover:bg-slate-50 transition-all active:scale-95 shadow-2xl hover:-translate-y-1 flex items-center justify-center gap-6 group">
+                        {{ auth()->check() ? 'Checkout' : 'Authenticate' }}
+                        <span class="material-symbols-outlined text-3xl group-hover:translate-x-3 transition-transform">east</span>
                     </button>
                 </div>
             </div>

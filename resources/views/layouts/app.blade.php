@@ -8,37 +8,16 @@
         <title>{{ config('app.name', 'Laravel') }}</title>
 
         <!-- Fonts -->
-        <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&family=Inter:wght@100..900&display=swap" rel="stylesheet">
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
 
         <!-- Scripts -->
-        <script>
-            function applyTheme() {
-                const theme = localStorage.theme || 'system';
-                const isDark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-                
-                if (isDark) {
-                    document.documentElement.classList.add('dark');
-                } else {
-                    document.documentElement.classList.remove('dark');
-                }
-            }
-
-            // Listen for system changes
-            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-                if (!localStorage.theme || localStorage.theme === 'system') {
-                    applyTheme();
-                }
-            });
-
-            document.addEventListener('livewire:navigated', applyTheme);
-
-            applyTheme();
-        </script>
         @vite(['resources/css/app.css', 'resources/js/app.jsx'])
     </head>
-    <body class="font-sans antialiased bg-gray-50 dark:bg-brand-dark text-gray-900 dark:text-gray-100 transition-colors duration-300">
+    <body class="font-sans antialiased bg-slate-50 text-slate-900 transition-colors duration-300 selection:bg-indigo-100 selection:text-indigo-900">
+
         <div class="min-h-screen">
             <div class="no-print">
                 <livewire:layout.navigation />

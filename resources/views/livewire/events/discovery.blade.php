@@ -75,8 +75,44 @@
                                 </span>
                             </div>
 
+                            <div x-data="{
+                                target: new Date('{{ $event->start_at ? $event->start_at->toIso8601String() : ($event->date ? $event->date->toIso8601String() : '') }}').getTime(),
+                                timeLeft: '',
+                                update() {
+                                    const now = new Date().getTime();
+                                    const diff = this.target - now;
+
+                                    if (isNaN(this.target)) return;
+
+                                    if (diff <= 0) {
+                                        this.timeLeft = 'Ongoing';
+                                        return;
+                                    }
+
+                                    const hoursTotal = diff / (1000 * 60 * 60);
+
+                                    if (hoursTotal >= 24) {
+                                        const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
+                                        this.timeLeft = `Live in ${days} Days`;
+                                    } else {
+                                        const hours = Math.floor(diff / (1000 * 60 * 60));
+                                        const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                                        this.timeLeft = `${hours}h ${mins}m`;
+                                    }
+                                }
+                            }" 
+                            x-init="update(); setInterval(() => update(), 60000)"
+                            class="absolute top-6 right-6"
+                            >
+                                <div x-show="timeLeft" 
+                                     class="px-4 py-1.5 rounded-full bg-black/40 backdrop-blur-xl border border-white/10 text-white text-[10px] font-black uppercase tracking-[0.2em] shadow-lg flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-[14px]">timer</span>
+                                    <span x-text="timeLeft"></span>
+                                </div>
+                            </div>
+
                             @if($event->ticketTypes->isNotEmpty())
-                                <div class="absolute top-6 right-6">
+                                <div class="absolute bottom-6 right-6">
                                     <div class="glass px-4 py-1.5 rounded-full flex items-center gap-2">
                                         <span class="material-symbols-outlined text-brand-orange text-sm">payments</span>
                                         <span class="text-white text-[10px] font-bold">

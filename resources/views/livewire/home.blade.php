@@ -1,26 +1,20 @@
 <div>
     <!-- Top Navigation Bar -->
-    <header
-        class="sticky top-0 z-50 w-full border-b border-slate-200 dark:border-slate-800 bg-background-light/80 dark:bg-[#101722]/80 backdrop-blur-md">
+    <header class="sticky top-0 z-50 w-full border-b border-slate-100 bg-white/90 backdrop-blur-md">
         <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
             <div class="flex items-center gap-3">
-                <x-application-logo class="w-10 h-10" />
+                <x-application-logo class="w-10 h-10 text-indigo-600" />
+                <span class="text-xl font-serif font-bold text-slate-900 tracking-tight">Pearl Pavilion</span>
             </div>
-            <nav class="hidden md:flex items-center gap-10 text-white">
-                <a class="text-sm font-medium hover:text-[#257bf4] transition-colors"
-                    href="{{ route('home') }}">Home</a>
-                <a class="text-sm font-medium hover:text-[#257bf4] transition-colors"
-                    href="{{ route('events.discovery') }}">Discover</a>
-                <a class="text-sm font-medium hover:text-[#257bf4] transition-colors" href="{{ route('about') }}">About
-                    Us</a>
-                <a class="text-sm font-medium hover:text-[#257bf4] transition-colors"
-                    href="{{ route('contact') }}">Contact</a>
+            <nav class="hidden md:flex items-center gap-10">
+                <a class="text-xs font-bold text-slate-600 hover:text-indigo-600 uppercase tracking-widest transition-colors" href="{{ route('home') }}">Home</a>
+                <a class="text-xs font-bold text-slate-600 hover:text-indigo-600 uppercase tracking-widest transition-colors" href="{{ route('events.discovery') }}">Discover</a>
+                <a class="text-xs font-bold text-slate-600 hover:text-indigo-600 uppercase tracking-widest transition-colors" href="{{ route('about') }}">About</a>
+                <a class="text-xs font-bold text-slate-600 hover:text-indigo-600 uppercase tracking-widest transition-colors" href="{{ route('contact') }}">Contact</a>
             </nav>
             <div class="flex items-center gap-4">
-                <a href="{{ route('login') }}"
-                    class="px-5 py-2 text-sm font-bold text-slate-700 dark:text-slate-200 hover:text-[#257bf4] transition-colors">Login</a>
-                <a href="{{ route('register') }}"
-                    class="bg-[#257bf4] hover:bg-[#257bf4]/90 text-white px-6 py-2.5 rounded-lg text-sm font-bold shadow-lg shadow-[#257bf4]/20 transition-all">
+                <a href="{{ route('login') }}" class="text-xs font-bold text-slate-500 hover:text-indigo-600 uppercase tracking-widest transition-colors px-4">Login</a>
+                <a href="{{ route('register') }}" class="btn-lux px-6 py-2 text-xs">
                     Register
                 </a>
             </div>
@@ -29,96 +23,99 @@
 
     <main>
         <!-- Hero Section -->
-        <section class="relative min-h-[85vh] flex items-center justify-center overflow-hidden">
+        <section class="relative min-h-[80vh] flex items-center justify-center overflow-hidden bg-slate-50">
             <div class="absolute inset-0 z-0">
-                <div class="absolute inset-0 bg-gradient-to-b from-[#101722]/40 via-[#101722]/80 to-[#101722]"></div>
+                <div class="absolute inset-0 bg-slate-900/10"></div>
                 <img alt="Premium Event Background" class="w-full h-full object-cover"
-                    src="https://images.unsplash.com/photo-1511795409834-ef04bbd61622?q=80&w=2069&auto=format&fit=crop" />
+                    src="{{ asset('images/site/home_hero.png') }}" />
+                <div class="absolute inset-0 bg-gradient-to-r from-white via-white/40 to-transparent"></div>
             </div>
-            <div class="relative z-10 max-w-4xl mx-auto px-6 text-center">
-                <div
-                    class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#257bf4]/10 border border-[#257bf4]/20 text-[#257bf4] text-xs font-bold uppercase tracking-widest mb-8">
-                    <span class="flex h-2 w-2 rounded-full bg-[#257bf4] animate-pulse"></span>
-                    Redefining Excellence
-                </div>
-                <h1 class="text-5xl md:text-7xl font-black text-white leading-tight tracking-tight mb-8">
-                    Crafting <span class="text-[#257bf4]">Unforgettable</span> Moments with Ease
-                </h1>
-                <p class="text-lg md:text-xl text-slate-300 max-w-2xl mx-auto mb-12 leading-relaxed">
-                    Experience the ultimate in premium event coordination with our sophisticated planning suite designed
-                    for high-profile gatherings.
-                </p>
-                <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
-                    <a href="{{ route('register') }}"
-                        class="w-full sm:w-auto bg-[#257bf4] hover:bg-[#257bf4]/90 text-white px-10 py-4 rounded-xl text-lg font-bold shadow-xl shadow-[#257bf4]/30 transition-all text-center">
-                        Get Started
-                    </a>
-                    <a href="{{ route('about') }}"
-                        class="w-full sm:w-auto glass hover:bg-white/10 text-white px-10 py-4 rounded-xl text-lg font-bold transition-all border border-white/20 text-center">
-                        Learn More
-                    </a>
+            <div class="relative z-10 max-w-7xl w-full mx-auto px-6">
+                <div class="max-w-2xl">
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-indigo-50 border border-indigo-100 text-indigo-600 text-[10px] font-bold uppercase tracking-widest mb-8">
+                        <span class="flex h-1.5 w-1.5 rounded-full bg-indigo-600"></span>
+                        Quality Service
+                    </div>
+                    <h1 class="text-5xl md:text-7xl font-serif font-bold text-slate-900 leading-tight mb-8">
+                        Plan Your <span class="text-indigo-600 italic">Perfect</span> Event
+                    </h1>
+                    <p class="text-lg text-slate-600 max-w-lg mb-12 leading-relaxed">
+                        Experience simple and professional event coordination for your next gathering.
+                    </p>
+                    <div class="flex flex-col sm:flex-row items-center gap-4">
+                        <a href="{{ route('register') }}" class="btn-lux px-10 py-4 text-sm w-full sm:w-auto text-center">
+                            Get Started
+                        </a>
+                        <a href="{{ route('about') }}" class="w-full sm:w-auto px-10 py-4 bg-white/80 backdrop-blur-md border border-slate-200 text-slate-600 hover:text-slate-900 rounded-lg text-xs font-bold uppercase tracking-widest transition-all text-center">
+                            Learn More
+                        </a>
+                    </div>
                 </div>
             </div>
         </section>
 
         <!-- Discovery Preview Section -->
         @if($featuredEvents->isNotEmpty())
-            <section class="py-32 bg-white dark:bg-brand-dark overflow-hidden relative border-b border-white/5">
-                <div class="absolute top-0 right-0 w-96 h-96 bg-brand-orange/5 blur-[120px] rounded-full -translate-y-1/2 translate-x-1/2"></div>
-                
+            <section class="py-24 bg-white overflow-hidden relative">
                 <div class="max-w-7xl mx-auto px-6 relative z-10">
-                    <div class="flex flex-col md:flex-row justify-between items-end gap-10 mb-20">
+                    <div class="flex flex-col md:flex-row justify-between items-end gap-6 mb-16">
                         <div class="max-w-2xl">
-                            <h3 class="text-brand-orange font-black text-xs tracking-[0.3em] uppercase mb-4">Discovery</h3>
-                            <h2 class="text-4xl md:text-6xl font-black text-white leading-tight">Shared <span class="text-brand-orange">Experiences</span> Near You</h2>
+                            <h3 class="text-indigo-600 font-bold text-[10px] uppercase tracking-widest mb-4">Recent Events</h3>
+                            <h2 class="text-4xl font-serif font-bold text-slate-900 leading-tight">Shared <span class="text-indigo-600">Events</span> Near You</h2>
                         </div>
-                        <a href="{{ route('events.discovery') }}" class="group flex items-center gap-4 text-white font-bold text-lg hover:text-brand-orange transition-all">
+                        <a href="{{ route('events.discovery') }}" class="group flex items-center gap-3 text-slate-400 hover:text-indigo-600 font-bold text-xs uppercase tracking-widest transition-all">
                             View All Events
-                            <span class="material-symbols-outlined transition-transform group-hover:translate-x-2">arrow_forward</span>
+                            <span class="material-symbols-outlined text-lg transition-transform group-hover:translate-x-1">arrow_forward</span>
                         </a>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                         @foreach($featuredEvents as $event)
-                            <a href="{{ route('events.show', $event) }}" class="group block glass-card rounded-[3rem] overflow-hidden transition-all hover:-translate-y-3 hover:shadow-3xl hover:shadow-brand-orange/20 border-white/5">
-                                <div class="relative h-72 overflow-hidden">
+                            <a href="{{ route('events.show', $event) }}" class="group block bg-white border border-slate-100 rounded-lg overflow-hidden transition-all hover:shadow-xl hover:border-indigo-100">
+                                <div class="relative h-64 overflow-hidden">
                                     <img 
                                         src="{{ $event->banner_image_path ? Storage::url($event->banner_image_path) : 'https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?q=80&w=2070&auto=format&fit=crop' }}" 
                                         alt="{{ $event->title }}"
-                                        class="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
+                                        class="w-full h-full object-cover grayscale-[20%] group-hover:grayscale-0 transition-all duration-700"
                                     >
-                                    <div class="absolute inset-0 bg-gradient-to-t from-brand-dark via-brand-dark/20 to-transparent"></div>
+                                    <div class="absolute inset-0 bg-gradient-to-t from-slate-900/40 via-transparent to-transparent"></div>
                                     
-                                    <div class="absolute top-8 left-8">
-                                        <span class="px-5 py-2 rounded-full bg-brand-orange/90 backdrop-blur-xl text-white text-[10px] font-black uppercase tracking-[0.2em] shadow-lg">
+                                    <div class="absolute top-6 left-6">
+                                        <span class="px-4 py-1.5 rounded-lg bg-white/90 backdrop-blur-md text-slate-900 text-[9px] font-bold uppercase tracking-widest shadow-sm">
                                             {{ $event->category->name ?? 'Special' }}
                                         </span>
                                     </div>
                                 </div>
 
-                                <div class="p-10">
-                                    <div class="flex items-center gap-4 mb-6 text-brand-orange">
-                                        <span class="material-symbols-outlined text-sm">event</span>
-                                        <span class="text-xs font-black uppercase tracking-widest">
+                                <div class="p-8">
+                                    <div class="flex items-center gap-2 mb-4 text-indigo-600">
+                                        <span class="material-symbols-outlined text-[14px]">calendar_today</span>
+                                        <span class="text-[10px] font-bold uppercase tracking-widest">
                                             {{ $event->start_at ? $event->start_at->format('M d, Y') : ($event->date ? $event->date->format('M d, Y') : 'Date Pending') }}
                                         </span>
                                     </div>
 
-                                    <h3 class="text-3xl font-black text-white mb-6 group-hover:text-brand-orange transition-colors line-clamp-2">
+                                    <h3 class="text-xl font-serif font-bold text-slate-900 mb-6 line-clamp-1 group-hover:text-indigo-600 transition-colors">
                                         {{ $event->title }}
                                     </h3>
 
-                                    <div class="flex items-center justify-between pt-8 border-t border-white/5">
+                                    <div class="flex items-center justify-between pt-6 border-t border-slate-50">
                                         <div class="flex items-center gap-3">
-                                            <img src="{{ $event->creator->profile_photo_url }}" alt="{{ $event->creator->name }}" class="w-10 h-10 rounded-full border-2 border-brand-orange/20">
-                                            <span class="text-xs text-gray-400 font-bold">{{ $event->creator->name }}</span>
+                                            <div class="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center overflow-hidden">
+                                                @if($event->creator->profile_photo_url)
+                                                    <img src="{{ $event->creator->profile_photo_url }}" alt="{{ $event->creator->name }}" class="w-full h-full object-cover">
+                                                @else
+                                                    <span class="material-symbols-outlined text-slate-400 text-lg">person</span>
+                                                @endif
+                                            </div>
+                                            <span class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{{ $event->creator->name }}</span>
                                         </div>
                                         @if($event->ticketTypes->isNotEmpty())
-                                            <div class="text-brand-orange font-black text-sm">
+                                            <div class="text-slate-900 font-serif font-bold text-sm">
                                                 @if($event->ticketTypes->min('price') == 0)
                                                     FREE
                                                 @else
-                                                    KES {{ number_format($event->ticketTypes->min('price')) }}+
+                                                    KES {{ number_format($event->ticketTypes->min('price')) }}
                                                 @endif
                                             </div>
                                         @endif
@@ -132,23 +129,21 @@
         @endif
 
         <!-- CTA Action Section -->
-        <section class="py-24 bg-background-light dark:bg-[#101722] border-y border-slate-200 dark:border-slate-800">
+        <section class="py-24 bg-white border-y border-slate-100">
             <div class="max-w-7xl mx-auto px-6">
-                <div
-                    class="glass-card rounded-3xl p-12 md:p-20 relative overflow-hidden flex flex-col items-center text-center">
-                    <div class="absolute -top-24 -right-24 w-64 h-64 bg-[#257bf4]/10 blur-[100px] rounded-full"></div>
-                    <div class="absolute -bottom-24 -left-24 w-64 h-64 bg-[#257bf4]/5 blur-[100px] rounded-full"></div>
-                    <h2 class="text-3xl md:text-5xl font-bold mb-6 text-white">Ready to plan your next event?</h2>
-                    <p class="text-slate-400 text-lg mb-12 max-w-2xl">Join thousands of professional event planners and
-                        individuals using our tools to create magic.</p>
-                    <div class="flex flex-wrap justify-center gap-6 w-full max-w-md">
-                        <a href="{{ route('login') }}"
-                            class="flex-1 min-w-[180px] py-5 px-8 rounded-2xl glass border-[#257bf4]/30 text-white font-bold text-lg hover:bg-[#257bf4]/20 transition-all text-center">
-                            Login
+                <div class="bg-indigo-600 rounded-lg p-12 md:p-20 relative overflow-hidden flex flex-col items-center text-center shadow-2xl shadow-indigo-100">
+                    <div class="absolute top-0 right-0 w-64 h-64 bg-white/5 blur-3xl rounded-full translate-x-1/2 -translate-y-1/2"></div>
+                    <div class="absolute bottom-0 left-0 w-64 h-64 bg-indigo-500/20 blur-3xl rounded-full -translate-x-1/2 translate-y-1/2"></div>
+                    
+                    <h2 class="text-3xl md:text-5xl font-serif font-bold mb-6 text-white leading-tight">Ready to plan your next event?</h2>
+                    <p class="text-indigo-100 text-lg mb-12 max-w-2xl leading-relaxed">Join thousands of planners and individuals using our tools to create perfect moments.</p>
+                    
+                    <div class="flex flex-col sm:flex-row justify-center gap-4 w-full max-w-md">
+                        <a href="{{ route('register') }}" class="w-full sm:w-auto px-10 py-4 bg-white text-indigo-600 font-bold text-xs uppercase tracking-widest rounded-lg hover:bg-indigo-50 transition-all text-center">
+                            Get Started
                         </a>
-                        <a href="{{ route('register') }}"
-                            class="flex-1 min-w-[180px] py-5 px-8 rounded-2xl bg-[#257bf4] text-white font-bold text-lg hover:shadow-2xl hover:shadow-[#257bf4]/40 transition-all text-center">
-                            Register
+                        <a href="{{ route('login') }}" class="w-full sm:w-auto px-10 py-4 bg-indigo-500 text-white font-bold text-xs uppercase tracking-widest rounded-lg border border-indigo-400 hover:bg-indigo-400 transition-all text-center">
+                            Login
                         </a>
                     </div>
                 </div>
@@ -156,58 +151,45 @@
         </section>
 
         <!-- Key Highlights Section -->
-        <section class="py-32 relative">
+        <section class="py-24 bg-white">
             <div class="max-w-7xl mx-auto px-6">
-                <div class="flex flex-col md:flex-row justify-between items-end gap-6 mb-20">
+                <div class="flex flex-col md:flex-row justify-between items-end gap-6 mb-16">
                     <div class="max-w-2xl">
-                        <h3 class="text-[#257bf4] font-bold text-sm tracking-[0.2em] uppercase mb-4">Features</h3>
-                        <h2 class="text-4xl md:text-5xl font-bold leading-tight text-white">Seamless Coordination for
-                            Elite Events</h2>
+                        <h3 class="text-indigo-600 font-bold text-[10px] uppercase tracking-widest mb-4">Features</h3>
+                        <h2 class="text-4xl font-serif font-bold leading-tight text-slate-900">Easy Planning for Professional Events</h2>
                     </div>
-                    <p class="text-slate-400 max-w-sm mb-2">Everything you need to manage high-end events in one
-                        sophisticated, unified workspace.</p>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    <!-- Card 1 -->
-                    <div class="glass-card p-10 rounded-[2rem] hover:border-[#257bf4]/40 transition-all group">
-                        <div
-                            class="w-16 h-16 rounded-2xl bg-[#257bf4]/10 flex items-center justify-center text-[#257bf4] mb-8 group-hover:scale-110 transition-transform">
-                            <span class="material-symbols-outlined text-3xl">groups</span>
+                    <!-- Feature 1 -->
+                    <div class="p-10 rounded-lg border border-slate-100 hover:border-indigo-100 transition-all group">
+                        <div class="w-12 h-12 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600 mb-8">
+                            <span class="material-symbols-outlined text-2xl">groups</span>
                         </div>
-                        <h4 class="text-2xl font-bold mb-4 text-white">Manage Guests</h4>
-                        <p class="text-slate-400 leading-relaxed mb-6">Effortlessly organize your VIP list with our
-                            glassmorphic interface and advanced tagging.</p>
-                        <a class="text-[#257bf4] font-semibold flex items-center gap-2 group-hover:gap-3 transition-all"
-                            href="#">
+                        <h4 class="text-xl font-serif font-bold mb-4 text-slate-900">Guest List</h4>
+                        <p class="text-slate-500 text-sm leading-relaxed mb-6">Effortlessly organize your guest list with simple tools for tagging and tracking.</p>
+                        <a class="text-indigo-600 font-bold text-[10px] uppercase tracking-widest flex items-center gap-2" href="#">
                             Learn more <span class="material-symbols-outlined text-sm">arrow_forward</span>
                         </a>
                     </div>
-                    <!-- Card 2 -->
-                    <div
-                        class="glass-card p-10 rounded-[2rem] border-[#257bf4]/20 bg-[#257bf4]/[0.02] hover:border-[#257bf4]/40 transition-all group">
-                        <div
-                            class="w-16 h-16 rounded-2xl bg-[#257bf4]/10 flex items-center justify-center text-[#257bf4] mb-8 group-hover:scale-110 transition-transform">
-                            <span class="material-symbols-outlined text-3xl">fact_check</span>
+                    <!-- Feature 2 -->
+                    <div class="p-10 rounded-lg border border-slate-100 hover:border-indigo-100 transition-all group shadow-2xl shadow-slate-100 bg-white">
+                        <div class="w-12 h-12 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600 mb-8">
+                            <span class="material-symbols-outlined text-2xl">fact_check</span>
                         </div>
-                        <h4 class="text-2xl font-bold mb-4 text-white">Track RSVP</h4>
-                        <p class="text-slate-400 leading-relaxed mb-6">Real-time updates on attendee status with elegant
-                            tracking tools and automated reminders.</p>
-                        <a class="text-[#257bf4] font-semibold flex items-center gap-2 group-hover:gap-3 transition-all"
-                            href="#">
+                        <h4 class="text-xl font-serif font-bold mb-4 text-slate-900">Status Updates</h4>
+                        <p class="text-slate-500 text-sm leading-relaxed mb-6">Get real-time updates on attendee status with simple tracking and reminders.</p>
+                        <a class="text-indigo-600 font-bold text-[10px] uppercase tracking-widest flex items-center gap-2" href="#">
                             Learn more <span class="material-symbols-outlined text-sm">arrow_forward</span>
                         </a>
                     </div>
-                    <!-- Card 3 -->
-                    <div class="glass-card p-10 rounded-[2rem] hover:border-[#257bf4]/40 transition-all group">
-                        <div
-                            class="w-16 h-16 rounded-2xl bg-[#257bf4]/10 flex items-center justify-center text-[#257bf4] mb-8 group-hover:scale-110 transition-transform">
-                            <span class="material-symbols-outlined text-3xl">mail</span>
+                    <!-- Feature 3 -->
+                    <div class="p-10 rounded-lg border border-slate-100 hover:border-indigo-100 transition-all group">
+                        <div class="w-12 h-12 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600 mb-8">
+                            <span class="material-symbols-outlined text-2xl">mail</span>
                         </div>
-                        <h4 class="text-2xl font-bold mb-4 text-white">Custom Invitations</h4>
-                        <p class="text-slate-400 leading-relaxed mb-6">Design stunning digital invites that match your
-                            event's aesthetic perfectly.</p>
-                        <a class="text-[#257bf4] font-semibold flex items-center gap-2 group-hover:gap-3 transition-all"
-                            href="#">
+                        <h4 class="text-xl font-serif font-bold mb-4 text-slate-900">Email Invites</h4>
+                        <p class="text-slate-500 text-sm leading-relaxed mb-6">Send professional digital invites that match your event's theme perfectly.</p>
+                        <a class="text-indigo-600 font-bold text-[10px] uppercase tracking-widest flex items-center gap-2" href="#">
                             Learn more <span class="material-symbols-outlined text-sm">arrow_forward</span>
                         </a>
                     </div>
@@ -216,24 +198,24 @@
         </section>
 
         <!-- Stats Section -->
-        <section class="py-24 bg-slate-100 dark:bg-slate-900/50">
-            <div class="max-w-7xl mx-auto px-6 text-white">
+        <section class="py-24 bg-slate-50">
+            <div class="max-w-7xl mx-auto px-6">
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
                     <div class="text-center">
-                        <div class="text-4xl md:text-5xl font-black text-[#257bf4] mb-2">500k+</div>
-                        <div class="text-sm font-bold uppercase tracking-widest text-slate-500">Events Planned</div>
+                        <div class="text-4xl md:text-5xl font-serif font-bold text-indigo-600 mb-2">500k+</div>
+                        <div class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Events Planned</div>
                     </div>
                     <div class="text-center">
-                        <div class="text-4xl md:text-5xl font-black text-[#257bf4] mb-2">12M+</div>
-                        <div class="text-sm font-bold uppercase tracking-widest text-slate-500">Guests Managed</div>
+                        <div class="text-4xl md:text-5xl font-serif font-bold text-indigo-600 mb-2">12M+</div>
+                        <div class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Guests Managed</div>
                     </div>
                     <div class="text-center">
-                        <div class="text-4xl md:text-5xl font-black text-[#257bf4] mb-2">99%</div>
-                        <div class="text-sm font-bold uppercase tracking-widest text-slate-500">Success Rate</div>
+                        <div class="text-4xl md:text-5xl font-serif font-bold text-indigo-600 mb-2">99%</div>
+                        <div class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Success Rate</div>
                     </div>
                     <div class="text-center">
-                        <div class="text-4xl md:text-5xl font-black text-[#257bf4] mb-2">24/7</div>
-                        <div class="text-sm font-bold uppercase tracking-widest text-slate-500">Elite Support</div>
+                        <div class="text-4xl md:text-5xl font-serif font-bold text-indigo-600 mb-2">24/7</div>
+                        <div class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Support</div>
                     </div>
                 </div>
             </div>
@@ -241,64 +223,53 @@
     </main>
 
     <!-- Footer -->
-    <footer class="bg-background-light dark:bg-[#101722] border-t border-slate-200 dark:border-slate-800 pt-20 pb-10">
+    <footer class="bg-indigo-950 pt-20 pb-10">
         <div class="max-w-7xl mx-auto px-6">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-12 mb-20 text-white">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-12 mb-20">
                 <div class="col-span-1 md:col-span-1">
                     <div class="flex items-center gap-3 mb-6">
-                        <x-application-logo class="w-10 h-10" />
+                        <x-application-logo class="w-10 h-10 text-white" />
+                        <span class="text-xl font-serif font-bold text-white tracking-tight">Pearl Pavilion</span>
                     </div>
-                    <p class="text-slate-400 leading-relaxed">
-                        The world's most sophisticated platform for organizing and managing premium events of all
-                        scales.
+                    <p class="text-indigo-200 text-sm leading-relaxed max-w-xs">
+                        A professional platform for organizing and managing events with simple and elegant tools.
                     </p>
                 </div>
                 <div>
-                    <h5 class="font-bold mb-6">Platform</h5>
+                    <h5 class="text-white text-xs font-bold uppercase tracking-widest mb-8">Platform</h5>
                     <ul class="space-y-4">
-                        <li><a class="text-slate-400 hover:text-[#257bf4] transition-colors" href="#">How it Works</a>
-                        </li>
-                        <li><a class="text-slate-400 hover:text-[#257bf4] transition-colors" href="#">Features</a></li>
-                        <li><a class="text-slate-400 hover:text-[#257bf4] transition-colors" href="#">Pricing</a></li>
-                        <li><a class="text-slate-400 hover:text-[#257bf4] transition-colors" href="#">Security</a></li>
+                        <li><a class="text-indigo-300 hover:text-white text-xs font-bold transition-colors" href="#">How it Works</a></li>
+                        <li><a class="text-indigo-300 hover:text-white text-xs font-bold transition-colors" href="#">Features</a></li>
+                        <li><a class="text-indigo-300 hover:text-white text-xs font-bold transition-colors" href="#">Pricing</a></li>
                     </ul>
                 </div>
                 <div>
-                    <h5 class="font-bold mb-6">Company</h5>
+                    <h5 class="text-white text-xs font-bold uppercase tracking-widest mb-8">Company</h5>
                     <ul class="space-y-4">
-                        <li><a class="text-slate-400 hover:text-[#257bf4] transition-colors"
-                                href="{{ route('about') }}">About Us</a></li>
-                        <li><a class="text-slate-400 hover:text-[#257bf4] transition-colors" href="#">Careers</a></li>
-                        <li><a class="text-slate-400 hover:text-[#257bf4] transition-colors"
-                                href="{{ route('contact') }}">Contact</a></li>
-                        <li><a class="text-slate-400 hover:text-[#257bf4] transition-colors" href="#">Partners</a></li>
+                        <li><a class="text-indigo-300 hover:text-white text-xs font-bold transition-colors" href="{{ route('about') }}">About Us</a></li>
+                        <li><a class="text-indigo-300 hover:text-white text-xs font-bold transition-colors" href="{{ route('contact') }}">Contact</a></li>
                     </ul>
                 </div>
                 <div>
-                    <h5 class="font-bold mb-6">Stay Updated</h5>
-                    <p class="text-slate-400 text-sm mb-4">Join our newsletter for the latest event trends.</p>
+                    <h5 class="text-white text-xs font-bold uppercase tracking-widest mb-8">Stay Updated</h5>
+                    <p class="text-indigo-300 text-xs mb-6">Join our newsletter for the latest event trends.</p>
                     <div class="flex gap-2">
-                        <input
-                            class="bg-slate-100 dark:bg-slate-800 border-none rounded-lg px-4 py-2 w-full text-sm focus:ring-2 focus:ring-[#257bf4] text-white"
-                            placeholder="Email" type="email" />
-                        <button class="bg-[#257bf4] p-2 rounded-lg text-white">
-                            <span class="material-symbols-outlined">send</span>
+                        <input class="bg-indigo-900 border-none rounded-lg px-4 py-3 w-full text-xs text-white placeholder-indigo-400 focus:ring-1 focus:ring-indigo-500" placeholder="Email Address" type="email" />
+                        <button class="bg-white p-3 rounded-lg text-indigo-950 hover:bg-indigo-50 transition-all">
+                            <span class="material-symbols-outlined text-xl">send</span>
                         </button>
                     </div>
                 </div>
             </div>
-            <div
-                class="border-t border-slate-200 dark:border-slate-800 pt-10 flex flex-col md:flex-row justify-between items-center gap-6">
-                <p class="text-slate-500 text-sm">© 2024 Event Planner Inc. All rights reserved.</p>
+            <div class="border-t border-indigo-900 pt-10 flex flex-col md:flex-row justify-between items-center gap-6">
+                <p class="text-indigo-400 text-[10px] font-bold uppercase tracking-widest">© 2026 Pearl Pavilion. All rights reserved.</p>
                 <div class="flex gap-8">
-                    <a class="text-slate-500 hover:text-[#257bf4] transition-colors" href="#"><span
-                            class="material-symbols-outlined">public</span></a>
-                    <a class="text-slate-500 hover:text-[#257bf4] transition-colors" href="#"><span
-                            class="material-symbols-outlined">alternate_email</span></a>
-                    <a class="text-slate-500 hover:text-[#257bf4] transition-colors" href="#"><span
-                            class="material-symbols-outlined">share</span></a>
+                    <a class="text-indigo-400 hover:text-white transition-colors" href="#"><span class="material-symbols-outlined text-xl">public</span></a>
+                    <a class="text-indigo-400 hover:text-white transition-colors" href="#"><span class="material-symbols-outlined text-xl">alternate_email</span></a>
+                    <a class="text-indigo-400 hover:text-white transition-colors" href="#"><span class="material-symbols-outlined text-xl">share</span></a>
                 </div>
             </div>
         </div>
     </footer>
+
 </div>
