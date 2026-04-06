@@ -11,20 +11,20 @@ class StatsOverview extends BaseWidget
 {
     protected function getStats(): array
     {
-        $organization = filament()->getTenant();
+        $userId = auth()->id();
 
         return [
-            Stat::make('Total Events', Event::where('organization_id', $organization->id)->count())
+            Stat::make('My Events', Event::where('user_id', $userId)->count())
                 ->description('All time events')
                 ->descriptionIcon('heroicon-m-calendar-days')
                 ->color('primary'),
-            Stat::make('Total RSVPs', RSVP::whereHas('event', fn ($query) => $query->where('organization_id', $organization->id))->count())
+            Stat::make('Total RSVPs', RSVP::whereHas('event', fn ($query) => $query->where('user_id', $userId))->count())
                 ->description('Confirmed attendance')
                 ->descriptionIcon('heroicon-m-check-badge')
                 ->color('success'),
-            Stat::make('Team Members', $organization->members()->count())
-                ->description('Organization staff')
-                ->descriptionIcon('heroicon-m-users')
+            Stat::make('Upcoming invitations', \App\Models\Invite::where('invitee_id', $userId)->count())
+                ->description('Pending invites')
+                ->descriptionIcon('heroicon-m-envelope')
                 ->color('info'),
         ];
     }

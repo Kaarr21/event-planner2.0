@@ -13,10 +13,6 @@ class Index extends Component
         $userId = Auth::id();
         
         $events = Event::where('user_id', $userId)
-            ->orWhereHas('organizers', function ($query) use ($userId) {
-                $query->where('user_id', $userId)
-                      ->whereNotNull('permissions');
-            })
             ->orWhereHas('receivedInvites', function ($query) use ($userId) {
                 $query->where('invitee_id', $userId)
                       ->where('status', 'pending');

@@ -154,7 +154,7 @@
                     }
 
                     if ($this->hasPermission('manage_invites') || $this->hasPermission('owner')) {
-                        $tabs[] = ['id' => 'team', 'label' => 'Team', 'icon' => 'shield_person'];
+                        $tabs[] = ['id' => 'analytics', 'label' => 'Analytics', 'icon' => 'monitoring'];
                     }
                 @endphp
 
@@ -872,30 +872,11 @@
                 </div>
             @endif
 
-            <!-- Team Tab (Owner/Organizers) -->
-            @if($activeTab === 'team' && ($this->hasPermission('manage_invites') || $this->hasPermission('owner')))
+            <!-- Analytics Tab (Owner/Organizers) -->
+            @if($activeTab === 'analytics' && ($this->hasPermission('manage_invites') || $this->hasPermission('owner')))
                 <div class="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-12">
                     <!-- Analytics Section -->
                     <livewire:events.analytics-dashboard :event="$event" />
-
-                    <div class="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
-                        @if($this->hasPermission('manage_invites'))
-                            <div class="bg-white dark:bg-gray-800/50 dark:backdrop-blur-xl rounded-[2.5rem] p-8 border border-gray-100 dark:border-white/5 shadow-sm">
-                                <div class="flex items-center justify-between mb-8">
-                                    <h4 class="text-xl font-black uppercase tracking-tighter text-gray-900 dark:text-white">Invited Members</h4>
-                                </div>
-                                <livewire:events.invited-list :event="$event" :selectedInviteIds="$selectedInviteIds" :canEditEvent="$this->hasPermission('edit_event')" />
-
-                            </div>
-                        @endif
-
-                        @if($this->hasPermission('owner'))
-                            <div class="bg-white dark:bg-gray-800/50 dark:backdrop-blur-xl rounded-[2.5rem] p-8 border border-gray-100 dark:border-white/5 shadow-sm">
-                                <h4 class="text-xl font-black uppercase tracking-tighter mb-8 text-gray-900 dark:text-white">Organizers</h4>
-                                <livewire:events.manage-organizers :event="$event" />
-                            </div>
-                        @endif
-                    </div>
                 </div>
             @endif
 

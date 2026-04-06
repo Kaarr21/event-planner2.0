@@ -11,7 +11,7 @@ class RSVPsChart extends ChartWidget
 
     protected function getData(): array
     {
-        $organization = filament()->getTenant();
+        $userId = auth()->id();
         $filter = $this->filter;
 
         $days = match ($filter) {
@@ -22,7 +22,7 @@ class RSVPsChart extends ChartWidget
             default => 30,
         };
 
-        $query = RSVP::whereHas('event', fn ($query) => $query->where('organization_id', $organization->id));
+        $query = RSVP::whereHas('event', fn ($query) => $query->where('user_id', $userId));
 
         if ($filter !== 'all') {
             $query->where('created_at', '>=', now()->subDays($days));

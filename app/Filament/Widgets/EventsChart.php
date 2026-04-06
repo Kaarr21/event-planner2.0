@@ -13,7 +13,7 @@ class EventsChart extends ChartWidget
 
     protected function getData(): array
     {
-        $organization = filament()->getTenant();
+        $userId = auth()->id();
         $filter = $this->filter;
         
         $days = match ($filter) {
@@ -24,7 +24,7 @@ class EventsChart extends ChartWidget
             default => 30,
         };
 
-        $query = Event::where('organization_id', $organization->id);
+        $query = Event::where('user_id', $userId);
         
         if ($filter !== 'all') {
             $query->where('created_at', '>=', now()->subDays($days));

@@ -56,7 +56,6 @@ class Event extends Model
         'google_place_id',
         'status',
         'cancellation_reason',
-        'organization_id',
         'category_id',
         'banner_image_path',
         'start_at',
@@ -100,13 +99,6 @@ class Event extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 
-    /**
-     * Get the organization that owns the event.
-     */
-    public function organization()
-    {
-        return $this->belongsTo(Organization::class);
-    }
 
     /**
      * Get the tasks for the event.
@@ -140,16 +132,6 @@ class Event extends Model
         return $this->hasMany(Invite::class);
     }
 
-    /**
-     * Get the organizers for the event.
-     */
-    public function organizers()
-    {
-        return $this->belongsToMany(User::class, 'event_organizers')
-            ->using(EventOrganizer::class)
-            ->withPivot('permissions')
-            ->withTimestamps();
-    }
 
     /**
      * Get the media for the event.
@@ -191,9 +173,6 @@ class Event extends Model
         return $query->where('status', self::STATUS_CANCELLED)
             ->where(function ($q) use ($userId) {
                 $q->where('user_id', $userId)
-                    ->orWhereHas('organizers', function ($oq) use ($userId) {
-                        $oq->where('user_id', $userId);
-                    })
                     ->orWhereHas('invites', function ($iq) use ($userId) {
                         $iq->where('invitee_id', $userId);
                     })

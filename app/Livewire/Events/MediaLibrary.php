@@ -190,7 +190,6 @@ class MediaLibrary extends Component
         return view('livewire.events.media-library', [
             'mediaItems' => $media,
             'allGuests' => $this->event->rsvps()->with('user')->get()->pluck('user'),
-            'allOrganizers' => $this->event->organizers()->get(),
         ]);
     }
 }

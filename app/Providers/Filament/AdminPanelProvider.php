@@ -26,15 +26,13 @@ class AdminPanelProvider extends PanelProvider
     {
         return $panel
             ->default()
-            ->id('org-admin')
-            ->path('org-admin')
+            ->id('admin')
+            ->path('admin')
             ->login()
             ->registration()
             ->passwordReset()
             ->emailVerification()
             ->profile()
-            ->tenant(\App\Models\Organization::class)
-            ->tenantProfile(\App\Filament\Pages\Tenancy\EditOrganizationProfile::class)
             ->colors([
                 'primary' => Color::Indigo,
                 'gray' => Color::Slate,

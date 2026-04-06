@@ -22,10 +22,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/events/cancelled', \App\Livewire\Events\Cancelled::class)->name('events.cancelled');
     Route::get('/events/create', \App\Livewire\Events\Create::class)->name('events.create');
     \Livewire\Volt\Volt::route('/events/{event}/checkout', 'events.checkout')->name('events.checkout');
-    Route::get('/orders/{order}/status', [\App\Http\Controllers\MpesaController::class, 'checkStatus'])->name('mpesa.status');
     Route::get('/notifications', \App\Livewire\Notifications\Index::class)->name('notifications.index');
 });
 
-Route::get('/orgs/{organization:slug}', [\App\Http\Controllers\OrganizationController::class, 'show'])->name('organizations.show');
 
 require __DIR__.'/auth.php';

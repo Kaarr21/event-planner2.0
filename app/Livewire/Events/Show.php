@@ -227,14 +227,13 @@ class Show extends Component
         setPermissionsTeamId($this->event->id);
         
         // Check for access to the event
-        $isOrganizer = $user->hasRole('organizer');
         $isOwner = $user->hasRole('owner');
         $isGuest = $user->hasRole('guest');
         $invite = $this->event->invites()->where('invitee_id', $user->id)->where('status', 'pending')->first();
         
         $isCreator = $this->event->user_id === $user->id;
         
-        if (!$isOrganizer && !$isOwner && !$isGuest && !$invite && !$isCreator) {
+        if (!$isOwner && !$isGuest && !$invite && !$isCreator) {
              if ($this->event->status === Event::STATUS_PUBLISHED || $this->event->visibility === Event::VISIBILITY_PUBLISHED) {
                  $this->userRole = 'guest';
                  $this->userPermissions = ['view'];
@@ -248,9 +247,6 @@ class Show extends Component
         if ($isOwner || $isCreator) {
             $this->userRole = 'owner';
             $this->userPermissions = $user->getAllPermissions()->pluck('name')->toArray();
-        } elseif ($isOrganizer) {
-            $this->userRole = 'organizer';
-            $this->userPermissions = $user->getPermissionNames()->toArray();
         } elseif ($isGuest) {
             $this->userRole = 'guest';
             $this->userPermissions = $user->getPermissionNames()->toArray();
@@ -538,11 +534,11 @@ class Show extends Component
 
     public function getEligibleAssigneesProperty()
     {
-        // Eligible: Organizers + Accepted (Attending) Guests
-        $organizerIds = $this->event->organizers()->pluck('users.id')->toArray();
+        // Eligible: Creator + Accepted (Attending) Guests
+        $creatorId = [$this->event->user_id];
         $guestIds = $this->event->rsvps()->where('status', 'attending')->pluck('user_id')->toArray();
         
-        $allIds = array_unique(array_merge($organizerIds, $guestIds));
+        $allIds = array_unique(array_merge($creatorId, $guestIds));
         
         return User::whereIn('id', $allIds)->get();
     }
@@ -1035,14 +1031,10 @@ class Show extends Component
         // 2. Get all RSVPs
         $rsvpUsers = $this->event->rsvps()->with('user')->get()->pluck('user');
         
-        // 3. Get all organizers
-        $organizers = $this->event->organizers()->get();
-
         // Unique recipients
         $recipients = collect()
             ->merge($inviteesWithUser)
             ->merge($rsvpUsers)
-            ->merge($organizers)
             ->where('id', '!==', $updatedBy->id)
             ->unique('id');
 
@@ -1090,8 +1082,6 @@ class Show extends Component
         $invites = $this->event->invites()->get();
         // 2. Get all RSVPs (those who responded)
         $rsvps = $this->event->rsvps()->with('user')->get();
-        // 3. Get all organizers
-        $organizers = $this->event->organizers()->get();
 
         // Track who we notified to avoid duplicates
         $notifiedUserIds = [];
@@ -1125,19 +1115,6 @@ class Show extends Component
             }
         }
 
-        // Notify Organizers (Exclude the one who cancelled)
-        foreach ($organizers as $organizer) {
-            if ($organizer->id !== $cancelledBy->id && !in_array($organizer->id, $notifiedUserIds)) {
-                $this->sendCancellationInAppNotification($organizer->id, $this->event, $cancelledBy, $this->cancellationReason);
-                $notifiedUserIds[] = $organizer->id;
-
-                 if ($organizer->email && !in_array($organizer->email, $notifiedEmails)) {
-                    \Illuminate\Support\Facades\Mail::to($organizer->email)
-                        ->send(new \App\Mail\EventCancelledMail($this->event, $cancelledBy, $this->cancellationReason));
-                    $notifiedEmails[] = $organizer->email;
-                }
-            }
-        }
     }
 
     protected function sendCancellationInAppNotification($userId, $event, $cancelledBy, $reason)
@@ -1185,27 +1162,6 @@ class Show extends Component
             }
         }
 
-        // Also notify organizers who haven't been notified
-        $organizers = $this->event->organizers()->get();
-        foreach ($organizers as $organizer) {
-            $exists = \App\Models\Notification::where('user_id', $organizer->id)
-                ->where('related_id', $this->event->id)
-                ->where('type', 'info')
-                ->where('title', 'Organizer Role Assigned')
-                ->exists();
-
-            if (!$exists) {
-                \App\Models\Notification::create([
-                    'user_id' => $organizer->id,
-                    'sender_id' => Auth::id(),
-                    'type' => 'info',
-                    'title' => 'Organizer Role Assigned',
-                    'message' => "You have been assigned as an organizer for: " . $this->event->title,
-                    'related_id' => $this->event->id,
-                ]);
-                $notifiedCount++;
-            }
-        }
 
         session()->flash('message', "Sent $notifiedCount invitations/notifications.");
     }

@@ -8,13 +8,11 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Storage;
 use Spatie\Permission\Traits\HasRoles;
-use Filament\Models\Contracts\HasTenants;
-use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 
-class User extends Authenticatable implements HasTenants, FilamentUser
+class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable, HasRoles;
@@ -122,16 +120,6 @@ class User extends Authenticatable implements HasTenants, FilamentUser
         return $this->hasMany(Invite::class, 'invitee_id');
     }
 
-    /**
-     * Get the events the user is an organizer for.
-     */
-    public function organizedEvents()
-    {
-        return $this->belongsToMany(Event::class, 'event_organizers')
-            ->using(EventOrganizer::class)
-            ->withPivot('permissions')
-            ->withTimestamps();
-    }
 
     /**
      * Get the custom categories created by the user.
@@ -141,29 +129,6 @@ class User extends Authenticatable implements HasTenants, FilamentUser
         return $this->hasMany(Category::class);
     }
 
-    /**
-     * Get the organizations the user is a member of.
-     */
-    public function organizations()
-    {
-        return $this->belongsToMany(Organization::class)->withPivot('role')->withTimestamps();
-    }
-
-    public function getTenants(Panel $panel): Collection
-    {
-        return $this->organizations()->get();
-    }
-
-    public function canAccessTenant(Model $tenant): bool
-    {
-        return $this->organizations->contains($tenant);
-    }
-
-    public function canAccessPanel(Panel $panel): bool
-    {
-        // Require the user to belong to at least one organization to access the panel
-        return $this->organizations->count() > 0;
-    }
 
     /**
      * Get the orders placed by the user.
